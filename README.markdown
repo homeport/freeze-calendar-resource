@@ -18,7 +18,7 @@ Emergency deploys are still possible by removing the `get` step from the pipelin
     uri: git@github.example.com:my-project/freeze-calendar
     branch: main
     private_key: ((vault/my-key))
-    calendar: subdir/project-freeze-calendar.yaml
+    path: subdir/project-freeze-calendar.yaml
 ```
 
 # `check` Behavior
