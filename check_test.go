@@ -2,7 +2,9 @@ package main_test
 
 import (
 	"encoding/json"
+	"io"
 	"os/exec"
+	"strings"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -27,9 +29,15 @@ var _ = Describe("Check", func() {
 
 	Context("Executing command", func() {
 		var session *gexec.Session
+		var config io.Reader
+
+		BeforeEach(func() {
+			config = strings.NewReader(`{ }`)
+		})
 
 		JustBeforeEach(func() {
 			command := exec.Command(check)
+			command.Stdin = config
 			session, err = gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).ShouldNot(HaveOccurred())
 
@@ -53,6 +61,16 @@ var _ = Describe("Check", func() {
 				SHA string `json:"sha"`
 			}
 
+			BeforeEach(func() {
+				config = strings.NewReader(`{
+					"source": {
+							"uri": "https://github.com/homeport/freeze-calendar-resource",
+							"branch": "main",
+							"path": "examples/freeze-calendar.yaml"
+					}
+				}`)
+			})
+
 			JustBeforeEach(func() {
 				err = json.Unmarshal(session.Out.Contents(), &version)
 			})
@@ -63,6 +81,10 @@ var _ = Describe("Check", func() {
 
 			It("produces valid JSON with a SHA field on StdOut", func() {
 				Expect(version.SHA).NotTo(BeEmpty())
+			})
+
+			It("produces the expected SHA", func() {
+				Expect(version.SHA).To(Equal("56dd3927d2582a332cacd5c282629293cd9a8870"))
 			})
 		})
 	})
