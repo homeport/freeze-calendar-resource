@@ -58,8 +58,8 @@ One freeze calendar may have `0..n` freeze windows
 ```yaml
 freeze_calendar:
   - name: Holiday Season
-    starts_at: 2022-12-01 06:00:00 +0000 UTC # RFC3339
-    ends_at: 2022-12-27 06:00:00 +0000 UTC
+    starts_at: 2022-12-01T06:00:00Z # native YAML timestamp
+    ends_at: 2022-12-27T06:00:00Z
     scope:
       - eu-de
       - us-east
