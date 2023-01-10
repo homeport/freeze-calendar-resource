@@ -5,6 +5,7 @@ import (
 	"io"
 	"os/exec"
 	"strings"
+	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -32,7 +33,12 @@ var _ = Describe("Check", func() {
 		var config io.Reader
 
 		BeforeEach(func() {
-			config = strings.NewReader(`{ }`)
+			config = strings.NewReader(`{
+				"source": {
+					"uri": "https://github.com/homeport/freeze-calendar-resource",
+					"path": "examples/freeze-calendar.yaml"
+				}
+			}`)
 		})
 
 		JustBeforeEach(func() {
@@ -41,7 +47,7 @@ var _ = Describe("Check", func() {
 			session, err = gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			session.Wait()
+			session.Wait(10 * time.Second)
 		})
 
 		It("executes successfully", func() {
@@ -53,23 +59,13 @@ var _ = Describe("Check", func() {
 		})
 
 		It("produces no output on StdErr", func() {
-			Eventually(session.Err.Contents()).Should(BeEmpty())
+			Eventually(string(session.Err.Contents())).Should(BeEmpty())
 		})
 
 		Context("On StdOut", func() {
 			var version struct {
 				SHA string `json:"sha"`
 			}
-
-			BeforeEach(func() {
-				config = strings.NewReader(`{
-					"source": {
-							"uri": "https://github.com/homeport/freeze-calendar-resource",
-							"branch": "main",
-							"path": "examples/freeze-calendar.yaml"
-					}
-				}`)
-			})
 
 			JustBeforeEach(func() {
 				err = json.Unmarshal(session.Out.Contents(), &version)
