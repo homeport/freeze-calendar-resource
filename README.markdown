@@ -32,7 +32,7 @@ Fetches the latest freeze calendar and emit its version (e.g. git SHA).
   - if gate: sleep if we are within a freeze window, retry after `$INTERVAL`
   - if fuse: fail if we are within a freeze window
 
-# `out` Behavior
+# `put` Behavior
 
 no-op
 

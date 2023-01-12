@@ -1,4 +1,4 @@
-package main_test
+package check_test
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestFreezeCalendarResource(t *testing.T) {
+func TestCheck(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "FreezeCalendarResource Suite")
+	RunSpecs(t, "Check Suite")
 }

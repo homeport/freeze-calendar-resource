@@ -3,6 +3,7 @@ module github.com/homeport/freeze-calendar-resource
 go 1.19
 
 require (
+	github.com/go-git/go-billy/v5 v5.3.1
 	github.com/go-git/go-git/v5 v5.5.1
 	github.com/onsi/ginkgo/v2 v2.5.1
 	github.com/onsi/gomega v1.24.1
@@ -15,7 +16,6 @@ require (
 	github.com/cloudflare/circl v1.1.0 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
-	github.com/go-git/go-billy/v5 v5.3.1 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/imdario/mergo v0.3.13 // indirect
