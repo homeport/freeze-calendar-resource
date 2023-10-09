@@ -30,7 +30,7 @@ type Response struct {
 }
 
 // TODO Perhaps replace with https://github.com/go-playground/validator
-func Validate(source Source) error {
+func ValidateSource(source Source) error {
 	if source.URI == "" {
 		return fmt.Errorf("source.uri must not be empty")
 	}

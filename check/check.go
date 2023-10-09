@@ -14,7 +14,6 @@ import (
 type Request struct {
 	Version resource.Version `json:"version,omitempty"`
 	Source  resource.Source  `json:"source"`
-	Params  resource.Params  `json:"params"`
 }
 
 // Expected on STDIN:
@@ -36,7 +35,7 @@ func Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err = resource.Validate(request.Source)
+	err = resource.ValidateSource(request.Source)
 
 	if err != nil {
 		return err
