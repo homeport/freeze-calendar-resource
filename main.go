@@ -1,109 +1,49 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"io"
-	"log"
+	"errors"
 	"os"
 
-	"github.com/go-git/go-billy/v5"
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/storage/memory"
+	"github.com/homeport/freeze-calendar-resource/check"
+	"github.com/spf13/cobra"
 )
 
-type Config struct {
-	Version Version `json:"version,omitempty"`
-	Source  Source  `json:"source"`
-}
-
-type Version struct {
-	SHA string `json:"sha"`
-}
-
-type Source struct {
-	URI    string `json:"uri"` // the git resource calls it uri, so we do it, too
-	Branch string `json:"branch"`
-	Path   string `json:"path"`
-}
-
-//	{
-//	   "source": {
-//		    "uri": "git@github.com:homeport/freeze-calendar-resource"
-//		    "branch": "main"
-//		    "private_key": "((vault/my-key))"
-//		    "path": "examples/freeze-calendar.yaml"
-//	   },
-//	   "version": { "sha": "..." }
-//	}
 func main() {
-	err := mainE()
-
-	if err != nil {
-		log.Fatalf("Error: %s", err)
+	if err := NewRootCommand().Execute(); err != nil {
+		os.Exit(1)
 	}
 }
-func mainE() error {
-	config, err := loadConfig(os.Stdin)
 
-	if err != nil {
-		return err
+func NewRootCommand() *cobra.Command {
+	var rootCommand = &cobra.Command{
+		Use:   "freeze-calendar",
+		Short: "Freeze Calendar Resource",
 	}
 
-	err = validateConfig(config)
+	rootCommand.AddCommand(
+		&cobra.Command{
+			Use:   "check",
+			Short: "Fetches the latest freeze calendar and emit its version",
+			RunE:  check.Run,
+		},
+		&cobra.Command{
+			Use:   "get",
+			Short: "Fetches the latest version of the freeze calendar and, if within a freeze, fails or sleeps.",
+			Long: `Fetches the latest version of the freeze calendar and:
 
-	if err != nil {
-		return err
-	}
+* If FUSE, the resource simply fails.
+* If GATE, the resource sleeps while the current date and time are within a freeze window. This is re-tried every INTERVAL.`,
+			RunE: func(cmd *cobra.Command, args []string) error {
 
-	var worktree billy.Filesystem // leaving this as nil so that we get a bare repo
+				return errors.New("not yet implemented")
+			},
+		},
+		&cobra.Command{
+			Use:   "put",
+			Short: "not implemented",
+			Run:   func(cmd *cobra.Command, args []string) { cmd.Println("no-op") },
+		},
+	)
 
-	repo, err := git.Clone(memory.NewStorage(), worktree, &git.CloneOptions{
-		URL: config.Source.URI,
-	})
-
-	if err != nil {
-		return fmt.Errorf("unable to clone: %w", err)
-	}
-
-	cIter, err := repo.Log(&git.LogOptions{PathFilter: func(s string) bool {
-		return s == config.Source.Path
-	}})
-
-	if err != nil {
-		return err
-	}
-
-	commit, err := cIter.Next()
-
-	if err != nil {
-		return err
-	}
-
-	fmt.Printf(`{"sha": "%s"}`, commit.Hash.String())
-
-	return nil
-}
-
-func validateConfig(c Config) error {
-	if c.Source.URI == "" {
-		return fmt.Errorf("source.uri must not be empty")
-	}
-
-	if c.Source.Path == "" {
-		return fmt.Errorf("source.path must not be empty")
-	}
-
-	return nil
-}
-
-func loadConfig(r io.Reader) (Config, error) {
-	data, err := io.ReadAll(r)
-	if err != nil {
-		return Config{}, err
-	}
-
-	var config Config
-	err = json.Unmarshal(data, &config)
-	return config, err
+	return rootCommand
 }

@@ -42,7 +42,7 @@ var _ = Describe("Check", func() {
 		})
 
 		JustBeforeEach(func() {
-			command := exec.Command(check)
+			command := exec.Command(check, "check")
 			command.Stdin = config
 			session, err = gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -55,11 +55,11 @@ var _ = Describe("Check", func() {
 		})
 
 		It("produces non-empty output on StdOut", func() {
-			Eventually(session.Out.Contents()).ShouldNot(BeEmpty())
+			Expect(session.Out.Contents()).ToNot(BeEmpty())
 		})
 
 		It("produces no output on StdErr", func() {
-			Eventually(string(session.Err.Contents())).Should(BeEmpty())
+			Expect(string(session.Err.Contents())).To(BeEmpty())
 		})
 
 		Context("On StdOut", func() {
