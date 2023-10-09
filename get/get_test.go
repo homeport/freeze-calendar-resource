@@ -34,11 +34,11 @@ var _ = Describe("Check", func() {
 
 	Context("Executing command", func() {
 		var session *gexec.Session
-		var config io.Reader
+		var request io.Reader
 
 		BeforeEach(func() {
 			tmpDir = GinkgoT().TempDir()
-			config = strings.NewReader(`{
+			request = strings.NewReader(`{
 				"source": {
 					"uri": "https://github.com/homeport/freeze-calendar-resource",
 					"path": "examples/freeze-calendar.yaml"
@@ -49,7 +49,7 @@ var _ = Describe("Check", func() {
 
 		JustBeforeEach(func() {
 			command := exec.Command(check, "get", tmpDir)
-			command.Stdin = config
+			command.Stdin = request
 			session, err = gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).ShouldNot(HaveOccurred())
 

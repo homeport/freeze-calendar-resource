@@ -21,8 +21,14 @@ type Source struct {
 	Path   string `json:"path"`
 }
 
+type NameValuePair struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
 type Response struct {
-	Version Version `json:"version"`
+	Version  Version         `json:"version"`
+	Metadata []NameValuePair `json:"metadata,omitempty"`
 }
 
 // TODO Perhaps replace with https://github.com/go-playground/validator
