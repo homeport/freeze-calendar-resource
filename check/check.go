@@ -3,28 +3,13 @@ package check
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 
 	"github.com/go-git/go-billy/v5"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/storage/memory"
+	"github.com/homeport/freeze-calendar-resource/concourse"
 	"github.com/spf13/cobra"
 )
-
-type Config struct {
-	Version Version `json:"version,omitempty"`
-	Source  Source  `json:"source"`
-}
-
-type Version struct {
-	SHA string `json:"sha"`
-}
-
-type Source struct {
-	URI    string `json:"uri"` // the git resource calls it uri, so we do it, too
-	Branch string `json:"branch"`
-	Path   string `json:"path"`
-}
 
 // Expected on STDIN:
 //
@@ -38,13 +23,13 @@ type Source struct {
 //	   "version": { "sha": "..." }
 //	}
 func Run(cmd *cobra.Command, args []string) error {
-	config, err := loadConfig(cmd.InOrStdin())
+	request, err := concourse.LoadRequest(cmd.InOrStdin())
 
 	if err != nil {
 		return err
 	}
 
-	err = validateConfig(config)
+	err = concourse.ValidateRequest(request)
 
 	if err != nil {
 		return err
@@ -53,7 +38,7 @@ func Run(cmd *cobra.Command, args []string) error {
 	var worktree billy.Filesystem // leaving this as nil so that we get a bare repo
 
 	repo, err := git.Clone(memory.NewStorage(), worktree, &git.CloneOptions{
-		URL: config.Source.URI,
+		URL: request.Source.URI,
 	})
 
 	if err != nil {
@@ -61,7 +46,7 @@ func Run(cmd *cobra.Command, args []string) error {
 	}
 
 	cIter, err := repo.Log(&git.LogOptions{PathFilter: func(s string) bool {
-		return s == config.Source.Path
+		return s == request.Source.Path
 	}})
 
 	if err != nil {
@@ -74,31 +59,11 @@ func Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	fmt.Printf(`{"sha": "%s"}`, commit.Hash.String())
+	response := concourse.Version{
+		SHA: commit.Hash.String(),
+	}
+
+	json.NewEncoder(cmd.OutOrStdout()).Encode(response)
 
 	return nil
-}
-
-// TODO Perhaps replace with https://github.com/go-playground/validator
-func validateConfig(c Config) error {
-	if c.Source.URI == "" {
-		return fmt.Errorf("source.uri must not be empty")
-	}
-
-	if c.Source.Path == "" {
-		return fmt.Errorf("source.path must not be empty")
-	}
-
-	return nil
-}
-
-func loadConfig(r io.Reader) (Config, error) {
-	data, err := io.ReadAll(r)
-	if err != nil {
-		return Config{}, err
-	}
-
-	var config Config
-	err = json.Unmarshal(data, &config)
-	return config, err
 }

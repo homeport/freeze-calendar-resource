@@ -1,10 +1,10 @@
 package main
 
 import (
-	"errors"
 	"os"
 
 	"github.com/homeport/freeze-calendar-resource/check"
+	"github.com/homeport/freeze-calendar-resource/get"
 	"github.com/spf13/cobra"
 )
 
@@ -33,10 +33,8 @@ func NewRootCommand() *cobra.Command {
 
 * If FUSE, the resource simply fails.
 * If GATE, the resource sleeps while the current date and time are within a freeze window. This is re-tried every INTERVAL.`,
-			RunE: func(cmd *cobra.Command, args []string) error {
-
-				return errors.New("not yet implemented")
-			},
+			Args: cobra.ExactArgs(1),
+			RunE: get.Run,
 		},
 		&cobra.Command{
 			Use:   "put",

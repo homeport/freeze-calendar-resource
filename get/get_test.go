@@ -1,9 +1,11 @@
-package check_test
+package get_test
 
 import (
 	"encoding/json"
 	"io"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -15,6 +17,7 @@ import (
 
 var check string
 var err error
+var tmpDir string
 
 var _ = BeforeSuite(func() {
 	check, err = gexec.Build("github.com/homeport/freeze-calendar-resource")
@@ -34,16 +37,18 @@ var _ = Describe("Check", func() {
 		var config io.Reader
 
 		BeforeEach(func() {
+			tmpDir = GinkgoT().TempDir()
 			config = strings.NewReader(`{
 				"source": {
 					"uri": "https://github.com/homeport/freeze-calendar-resource",
 					"path": "examples/freeze-calendar.yaml"
-				}
+				},
+				"version": { "sha": "56dd3927d2582a332cacd5c282629293cd9a8870" }
 			}`)
 		})
 
 		JustBeforeEach(func() {
-			command := exec.Command(check, "check")
+			command := exec.Command(check, "get", tmpDir)
 			command.Stdin = config
 			session, err = gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -63,23 +68,32 @@ var _ = Describe("Check", func() {
 			Expect(string(session.Err.Contents())).To(BeEmpty())
 		})
 
-		Context("On StdOut", func() {
-			var version concourse.Version
+		Context("response on stdout", func() {
+			var response concourse.Response
 
 			JustBeforeEach(func() {
-				err = json.Unmarshal(session.Out.Contents(), &version)
+				err = json.Unmarshal(session.Out.Contents(), &response)
 			})
 
-			It("produces valid JSON on StdOut", func() {
+			It("is valid JSON", func() {
 				Expect(err).NotTo(HaveOccurred())
 			})
 
-			It("produces valid JSON with a SHA field on StdOut", func() {
-				Expect(version.SHA).NotTo(BeEmpty())
+			It("has a SHA field with the expected value", func() {
+				Expect(response.Version).To(HaveField("SHA", Equal("56dd3927d2582a332cacd5c282629293cd9a8870")))
+			})
+		})
+
+		Context("calendar file", func() {
+			var content []byte
+
+			JustBeforeEach(func() {
+				content, err = os.ReadFile(filepath.Join(tmpDir, "examples/freeze-calendar.yaml"))
+				Expect(err).ToNot(HaveOccurred())
 			})
 
-			It("produces the expected SHA", func() {
-				Expect(version.SHA).To(Equal("56dd3927d2582a332cacd5c282629293cd9a8870"))
+			It("has some bytes", func() {
+				Expect(content).ToNot(BeEmpty())
 			})
 		})
 	})
