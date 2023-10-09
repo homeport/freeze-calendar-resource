@@ -7,9 +7,15 @@ import (
 	"github.com/go-git/go-billy/v5"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/storage/memory"
-	"github.com/homeport/freeze-calendar-resource/concourse"
+	"github.com/homeport/freeze-calendar-resource/resource"
 	"github.com/spf13/cobra"
 )
+
+type Request struct {
+	Version resource.Version `json:"version,omitempty"`
+	Source  resource.Source  `json:"source"`
+	Params  resource.Params  `json:"params"`
+}
 
 // Expected on STDIN:
 //
@@ -23,13 +29,14 @@ import (
 //	   "version": { "sha": "..." }
 //	}
 func Run(cmd *cobra.Command, args []string) error {
-	request, err := concourse.LoadRequest(cmd.InOrStdin())
+	var request Request
+	err := json.NewDecoder(cmd.InOrStdin()).Decode(&request)
 
 	if err != nil {
 		return err
 	}
 
-	err = concourse.ValidateRequest(request)
+	err = resource.Validate(request.Source)
 
 	if err != nil {
 		return err
@@ -59,7 +66,7 @@ func Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	response := concourse.Version{
+	response := resource.Version{
 		SHA: commit.Hash.String(),
 	}
 

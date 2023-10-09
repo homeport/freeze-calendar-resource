@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/homeport/freeze-calendar-resource/concourse"
+	"github.com/homeport/freeze-calendar-resource/resource"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
@@ -64,10 +64,10 @@ var _ = Describe("Check", func() {
 		})
 
 		Context("On StdOut", func() {
-			var version concourse.Version
+			var version resource.Version
 
 			JustBeforeEach(func() {
-				err = json.Unmarshal(session.Out.Contents(), &version)
+				err = json.NewDecoder(session.Out).Decode(&version)
 			})
 
 			It("produces valid JSON on StdOut", func() {

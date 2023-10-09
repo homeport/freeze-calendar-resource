@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/homeport/freeze-calendar-resource/concourse"
+	"github.com/homeport/freeze-calendar-resource/resource"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
@@ -69,10 +69,10 @@ var _ = Describe("Check", func() {
 		})
 
 		Context("response on stdout", func() {
-			var response concourse.Response
+			var response resource.Response
 
 			JustBeforeEach(func() {
-				err = json.Unmarshal(session.Out.Contents(), &response)
+				err = json.NewDecoder(session.Out).Decode(&response)
 			})
 
 			It("is valid JSON", func() {
