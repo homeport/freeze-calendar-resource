@@ -39,7 +39,8 @@ var _ = Describe("Check", func() {
 					"uri": "https://github.com/homeport/freeze-calendar-resource",
 					"path": "examples/freeze-calendar.yaml"
 				},
-				"version": { "sha": "56dd3927d2582a332cacd5c282629293cd9a8870" }
+				"version": { "sha": "56dd3927d2582a332cacd5c282629293cd9a8870" },
+				"params": { "mode": "fuse" }
 			}`)
 	})
 

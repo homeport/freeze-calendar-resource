@@ -48,6 +48,8 @@ Do not deploy if a window of the given `freeze-calendar` has the scope `eu-de` i
 
 # TODO
 
+* Allow [private repos](https://pkg.go.dev/github.com/go-git/go-git/v5#example-PlainClone-AccessToken)
+* Is it worth cloing into InMemory?
 * Add get parameter for `runway` (expected deploy time) in order to not start if there is not enough time left to complete the deployment before the next freeze begins
 * Get step writes the fetched freeze calendar to disk (for consumption by following tasks)
 

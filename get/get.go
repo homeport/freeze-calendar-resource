@@ -6,14 +6,15 @@ import (
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-playground/validator/v10"
 	"github.com/homeport/freeze-calendar-resource/freeze"
 	"github.com/homeport/freeze-calendar-resource/resource"
 	"github.com/spf13/cobra"
 )
 
 type Request struct {
-	Version resource.Version `json:"version,omitempty"`
-	Source  resource.Source  `json:"source"`
+	Version resource.Version `json:"version,omitempty" validate:"required"`
+	Source  resource.Source  `json:"source" validate:"required"`
 	Params  resource.Params  `json:"params"`
 }
 
@@ -25,7 +26,7 @@ func Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err = resource.ValidateSource(request.Source)
+	err = validator.New(validator.WithRequiredStructEnabled()).Struct(request)
 
 	if err != nil {
 		return err
