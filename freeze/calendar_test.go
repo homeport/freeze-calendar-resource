@@ -85,4 +85,23 @@ freeze_calendar:
 			})
 		})
 	})
+
+	Context("window without name", func() {
+		BeforeEach(func() {
+			content = `
+freeze_calendar:
+  - name: ~
+    starts_at: 2022-12-01T06:00:00Z
+    ends_at: 2022-12-27T06:00:00Z
+    scope:
+      - eu-de
+      - us-east
+      - ap-southeast
+`
+		})
+
+		It("fails", func() {
+			Expect(err).To(HaveOccurred())
+		})
+	})
 })

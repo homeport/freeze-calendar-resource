@@ -51,14 +51,6 @@ var _ = Describe("Get", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 	})
 
-	It("produces non-empty output on stdout", func() {
-		Expect(stdout.String()).ToNot(BeEmpty())
-	})
-
-	It("produces no output on stderr", func() {
-		Expect(stderr.String()).To(BeEmpty())
-	})
-
 	Context("response on stdout", func() {
 		var response resource.Response
 

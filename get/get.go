@@ -3,6 +3,7 @@ package get
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -64,6 +65,20 @@ func Run(cmd *cobra.Command, args []string) error {
 
 	if err != nil {
 		return fmt.Errorf("unable to decode calendar: %w", err)
+	}
+
+	now := time.Now() // TODO use clock for testability
+
+	for _, window := range calendar.Windows {
+		if window.Start.After(now) {
+			fmt.Fprintf(cmd.ErrOrStderr(), "Skipping window '%s' as its start %s is in the future (after %s)", window.Name, window.Start.UTC(), now.UTC())
+			continue
+		}
+
+		if window.End.Before(now) {
+			fmt.Fprintf(cmd.ErrOrStderr(), "Skipping window '%s' as its end %s is in the past (before %s)", window.Name, window.End.UTC(), now.UTC())
+			continue
+		}
 	}
 
 	response := resource.Response{
