@@ -3,74 +3,67 @@ package check_test
 import (
 	"encoding/json"
 	"io"
-	"os/exec"
 	"strings"
-	"time"
 
+	"github.com/homeport/freeze-calendar-resource/check"
 	"github.com/homeport/freeze-calendar-resource/resource"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gexec"
+	"github.com/spf13/cobra"
 )
 
-var check string
-var err error
-
-var _ = BeforeSuite(func() {
-	check, err = gexec.Build("github.com/homeport/freeze-calendar-resource")
-	Expect(err).ShouldNot(HaveOccurred())
-})
-
-var _ = AfterSuite(func() {
-	gexec.CleanupBuildArtifacts()
-})
-
 var _ = Describe("Check", func() {
-	var session *gexec.Session
-	var request io.Reader
+	var (
+		err    error
+		cmd    *cobra.Command
+		stdin  io.Reader
+		stdout strings.Builder
+		stderr strings.Builder
+	)
 
 	BeforeEach(func() {
-		request = strings.NewReader(`{
+		stdin = strings.NewReader(`{
 				"source": {
 					"uri": "https://github.com/homeport/freeze-calendar-resource",
 					"path": "examples/freeze-calendar.yaml"
 				}
 			}`)
+		stdout = strings.Builder{}
+		stderr = strings.Builder{}
+		cmd = &cobra.Command{}
+		cmd.SetIn(stdin)
+		cmd.SetOut(&stdout)
+		cmd.SetErr(&stderr)
 	})
 
 	JustBeforeEach(func() {
-		command := exec.Command(check, "check")
-		command.Stdin = request
-		session, err = gexec.Start(command, GinkgoWriter, GinkgoWriter)
-		Expect(err).ShouldNot(HaveOccurred())
-
-		session.Wait(10 * time.Second)
+		check.Run(cmd, []string{})
 	})
 
 	It("executes successfully", func() {
-		Expect(session.ExitCode()).To(Equal(0))
+		Expect(err).ShouldNot(HaveOccurred())
 	})
 
-	It("produces non-empty output on StdOut", func() {
-		Expect(session.Out.Contents()).ToNot(BeEmpty())
+	It("produces non-empty output on stdout", func() {
+		Expect(stdout.String()).ToNot(BeEmpty())
 	})
 
-	It("produces no output on StdErr", func() {
-		Expect(string(session.Err.Contents())).To(BeEmpty())
+	It("produces no output on stderr", func() {
+		Expect(stderr.String()).To(BeEmpty())
 	})
 
-	Context("On StdOut", func() {
+	Context("response on stdout", func() {
 		var version resource.Version
 
 		JustBeforeEach(func() {
-			err = json.NewDecoder(session.Out).Decode(&version)
+			err = json.NewDecoder(strings.NewReader(stdout.String())).Decode(&version)
 		})
 
-		It("produces valid JSON on StdOut", func() {
+		It("produces valid JSON on stdout", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		It("produces valid JSON with a SHA field on StdOut", func() {
+		It("produces valid JSON with a SHA field on stdout", func() {
 			Expect(version.SHA).NotTo(BeEmpty())
 		})
 
