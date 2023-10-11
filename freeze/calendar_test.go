@@ -26,7 +26,7 @@ var _ = Describe("Calendar", func() {
 			content = "---"
 		})
 
-		It("works", func() {
+		It("is acceptable", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
 
@@ -93,15 +93,49 @@ freeze_calendar:
   - name:
     starts_at: 2022-12-01T06:00:00Z
     ends_at: 2022-12-27T06:00:00Z
-    scope:
-      - eu-de
-      - us-east
-      - ap-southeast
 `
 		})
 
 		It("fails", func() {
 			Expect(err).To(HaveOccurred())
+		})
+
+		It("has the expected error message", func() {
+			Expect(err).To(MatchError(ContainSubstring("validation for 'Name' failed")))
+		})
+	})
+
+	Context("ends_at is before starts_at", func() {
+		BeforeEach(func() {
+			content = `
+freeze_calendar:
+  - name: Wrong order
+    starts_at: 2022-12-27T06:00:00Z
+    ends_at: 2022-12-01T06:00:00Z
+`
+		})
+
+		It("fails", func() {
+			Expect(err).To(HaveOccurred())
+		})
+
+		It("has the expected error message", func() {
+			Expect(err).To(MatchError(ContainSubstring("validation for 'End' failed")))
+		})
+	})
+
+	Context("empty scope", func() {
+		BeforeEach(func() {
+			content = `freeze_calendar:
+  - name: Holiday Season
+    starts_at: 2022-12-01T06:00:00Z
+    ends_at: 2022-12-27T06:00:00Z
+    scope:
+`
+		})
+
+		It("is acceptable", func() {
+			Expect(err).ToNot(HaveOccurred())
 		})
 	})
 })
