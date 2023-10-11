@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	timeMachine "github.com/benbjohnson/clock"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-playground/validator/v10"
@@ -35,6 +36,10 @@ var (
 	Gate = Mode{"gate"}
 	Modi = enum.New(Fuse, Gate)
 )
+
+type ContextKey string
+
+const ContextKeyClock = ContextKey("clock")
 
 func (m *Mode) UnmarshalJSON(b []byte) error {
 	unquoted, err := strconv.Unquote(string(b))
@@ -101,7 +106,14 @@ func RunE(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("unable to load calendar: %w", err)
 	}
 
-	now := time.Now() // TODO use clock for testability
+	var now time.Time
+
+	if value := cmd.Context().Value(ContextKeyClock); value != nil {
+		now = value.(timeMachine.Clock).Now().UTC()
+	} else {
+		now = time.Now().UTC()
+	}
+
 	var activeFreezeWindows []freeze.Window
 
 	for _, window := range calendar.Windows {

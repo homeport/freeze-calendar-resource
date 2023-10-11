@@ -37,8 +37,8 @@ var _ = Describe("Check", func() {
 		cmd.SetArgs([]string{}) // Don't let Ginkgo arguments get in the way
 	})
 
-	JustBeforeEach(func() {
-		err = cmd.Execute()
+	JustBeforeEach(func(ctx SpecContext) {
+		err = cmd.ExecuteContext(ctx)
 	})
 
 	It("executes successfully", func() {

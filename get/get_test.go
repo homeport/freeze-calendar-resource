@@ -1,11 +1,15 @@
 package get_test
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
+
+	timeMachine "github.com/benbjohnson/clock"
 
 	"github.com/homeport/freeze-calendar-resource/get"
 	"github.com/homeport/freeze-calendar-resource/resource"
@@ -22,6 +26,8 @@ var _ = Describe("Get", func() {
 		stdout strings.Builder
 		stderr strings.Builder
 		tmpDir string
+		clock  *timeMachine.Mock
+		now    time.Time
 	)
 
 	BeforeEach(func() {
@@ -43,10 +49,13 @@ var _ = Describe("Get", func() {
 		cmd.SetIn(stdin)
 		cmd.SetOut(&stdout)
 		cmd.SetErr(&stderr)
+
+		clock = timeMachine.NewMock()
 	})
 
-	JustBeforeEach(func() {
-		err = cmd.Execute()
+	JustBeforeEach(func(ctx SpecContext) {
+		clock.Set(now)
+		err = cmd.ExecuteContext(context.WithValue(ctx, get.ContextKeyClock, clock))
 	})
 
 	It("executes successfully", func() {
@@ -79,6 +88,20 @@ var _ = Describe("Get", func() {
 
 		It("has some bytes", func() {
 			Expect(content).ToNot(BeEmpty())
+		})
+	})
+
+	Context("within the freeze", func() {
+		BeforeEach(func(ctx SpecContext) {
+			now = time.Unix(1671690195, 0)
+		})
+
+		It("fails", func() {
+			Expect(err).To(HaveOccurred())
+		})
+
+		It("has an error message", func() {
+			Expect(err).To(MatchError(ContainSubstring("fuse has blown")))
 		})
 	})
 })
