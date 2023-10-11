@@ -32,7 +32,7 @@ In `fuse` mode:
   1. Fetch the calendar at the version that was discovered by the `check` step
   1. Fail if we are within a freeze window with a matching scope.
 
-* In `gate` mode:
+In `gate` mode:
 
   loop:
     - fetch the _latest_ version of the freeze calendar
