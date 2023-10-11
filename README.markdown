@@ -34,10 +34,11 @@ In `fuse` mode:
 
 In `gate` mode:
 
-  loop:
-    - fetch the _latest_ version of the freeze calendar
-    - exit `0` we are _not_ within a freeze window with a matching scope
-    - sleep for `$INTERVAL`
+  `loop`:
+
+  - fetch the _latest_ version of the freeze calendar
+  - exit `0` we are _not_ within a freeze window with a matching scope
+  - sleep for `$INTERVAL`
 
 # `put` Behavior
 
