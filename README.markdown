@@ -27,10 +27,17 @@ Fetches the latest freeze calendar and emit its version (e.g. git SHA).
 
 # `get` Behavior
 
-* loop:
-  - fetch the _latest_ version of the freeze calendar
-  - if gate: sleep if we are within a freeze window, retry after `$INTERVAL`
-  - if fuse: fail if we are within a freeze window
+In `fuse` mode:
+
+  1. Fetch the calendar at the version that was discovered by the `check` step
+  1. Fail if we are within a freeze window with a matching scope.
+
+* In `gate` mode:
+
+  loop:
+    - fetch the _latest_ version of the freeze calendar
+    - exit `0` we are _not_ within a freeze window with a matching scope
+    - sleep for `$INTERVAL`
 
 # `put` Behavior
 
@@ -45,20 +52,6 @@ Do not deploy if a window of the given `freeze-calendar` has the scope `eu-de` i
   params:
     scope: eu-de
 ```
-
-# TODO
-
-* Allow [private repos](https://pkg.go.dev/github.com/go-git/go-git/v5#example-PlainClone-AccessToken)
-* Is it worth cloning into InMemory?
-* What if we realize the freeze calendar is wrong and the get step is already running in `gate` mode?
-  We can't just push an update because the get step does not updates the repo while in front of the gate.
-
-  Options:
-  - One could argue that the whole build must be cancelled manually, and re-started after the updated calendar was pushed.
-  - Some other means of manual override could be used
-  - We could poll the repo continously, and move to the tip of the branch if there are new commits.
-* Add get parameter for `runway` (expected deploy time) in order to not start if there is not enough time left to complete the deployment before the next freeze begins
-* Get step writes the fetched freeze calendar to disk (for consumption by following tasks)
 
 # Freeze Calendar Format
 
@@ -77,6 +70,21 @@ freeze_calendar:
     ...
 ```
 
-# Misc
+# FAQ
 
-* Multiple freeze calendars are an external concern; this resource always operates on a single freeze calendar (that might be generated from multiple sources by another process).
+## I have multiple freeze calendars, can you support that?
+
+This resource always operates on a single freeze calendar. You might, however, synthesize a single calendar from multiple sources and use it as this resource's calendar.
+
+## What if I realize the freeze calendar is wrong and the `get` step is already running?
+
+Update the calendar and push the changes:
+
+* If the resource is running in `gate` mode, the get step will update the repo while in front of the gate. It will pick up the new version eventually. If the pipeline is already past the step, you'll have to stop the pipeline manually.
+* If the resource is running in `fuse` mode, it will use the version discovered by the check step. Re-running the job with fresh inputs should be sufficient.
+
+# TODO
+
+* Allow [private repos](https://pkg.go.dev/github.com/go-git/go-git/v5#example-PlainClone-AccessToken)
+* Is it worth cloning into InMemory?
+* Add get parameter for `runway` (expected deploy time) in order to not start if there is not enough time left to complete the deployment before the next freeze begins
