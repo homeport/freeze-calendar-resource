@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Validation", func() {
+var _ = Describe("Source Validation", func() {
 	var (
 		err    error
 		source resource.Source

@@ -3,6 +3,7 @@ package get
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/go-git/go-git/v5"
@@ -10,13 +11,45 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/homeport/freeze-calendar-resource/freeze"
 	"github.com/homeport/freeze-calendar-resource/resource"
+	"github.com/orsinium-labs/enum"
 	"github.com/spf13/cobra"
 )
 
 type Request struct {
 	Version resource.Version `json:"version,omitempty" validate:"required"`
 	Source  resource.Source  `json:"source" validate:"required"`
-	Params  resource.Params  `json:"params"`
+	Params  Params           `json:"params"`
+}
+
+type Params struct {
+	Mode  Mode     `json:"mode"`
+	Scope []string `json:"scope"`
+	Debug bool     `json:"debug"`
+}
+
+type Mode enum.Member[string]
+
+var (
+	Fuse = Mode{"fuse"}
+	Gate = Mode{"gate"}
+	Modi = enum.New(Fuse, Gate)
+)
+
+func (m *Mode) UnmarshalJSON(b []byte) error {
+	unquoted, err := strconv.Unquote(string(b))
+
+	if err != nil {
+		return err
+	}
+
+	parsed := Modi.Parse(unquoted)
+
+	if parsed == nil {
+		return fmt.Errorf("%s is not a valid mode, valid ones are %s", string(b), Modi.String())
+	}
+
+	*m = *parsed
+	return nil
 }
 
 func Run(cmd *cobra.Command, args []string) error {
