@@ -33,20 +33,19 @@ var _ = Describe("Get", func() {
 	BeforeEach(func() {
 		tmpDir = GinkgoT().TempDir()
 		stdin = strings.NewReader(`{
-				"source": {
-					"uri": "https://github.com/homeport/freeze-calendar-resource",
-					"path": "examples/freeze-calendar.yaml"
-				},
-				"version": { "sha": "56dd3927d2582a332cacd5c282629293cd9a8870" },
-				"params": { "mode": "fuse" }
-			}`)
+			"source": {
+				"uri": "https://github.com/homeport/freeze-calendar-resource",
+				"path": "examples/freeze-calendar.yaml"
+			},
+			"version": { "sha": "56dd3927d2582a332cacd5c282629293cd9a8870" },
+			"params": { "mode": "fuse", "scope": ["eu-de"] }
+		}`)
 
 		stdout = strings.Builder{}
 		stderr = strings.Builder{}
 
 		cmd = &cobra.Command{RunE: get.RunE}
 		cmd.SetArgs([]string{tmpDir})
-		cmd.SetIn(stdin)
 		cmd.SetOut(&stdout)
 		cmd.SetErr(&stderr)
 
@@ -54,6 +53,7 @@ var _ = Describe("Get", func() {
 	})
 
 	JustBeforeEach(func(ctx SpecContext) {
+		cmd.SetIn(stdin)
 		clock.Set(now)
 		err = cmd.ExecuteContext(context.WithValue(ctx, get.ContextKeyClock, clock))
 	})
@@ -96,12 +96,31 @@ var _ = Describe("Get", func() {
 			now = time.Unix(1671690195, 0)
 		})
 
-		It("fails", func() {
-			Expect(err).To(HaveOccurred())
+		Context("in scope", func() {
+			It("fails", func() {
+				Expect(err).To(HaveOccurred())
+			})
+
+			It("has an error message", func() {
+				Expect(err).To(MatchError(ContainSubstring("fuse has blown")))
+			})
 		})
 
-		It("has an error message", func() {
-			Expect(err).To(MatchError(ContainSubstring("fuse has blown")))
+		Context("out of scope", func() {
+			BeforeEach(func() {
+				stdin = strings.NewReader(`{
+					"source": {
+						"uri": "https://github.com/homeport/freeze-calendar-resource",
+						"path": "examples/freeze-calendar.yaml"
+					},
+					"version": { "sha": "56dd3927d2582a332cacd5c282629293cd9a8870" },
+					"params": { "mode": "fuse", "scope": ["eu-gb"] }
+				}`)
+			})
+
+			It("succeeds", func() {
+				Expect(err).ToNot(HaveOccurred())
+			})
 		})
 	})
 })

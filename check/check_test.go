@@ -31,13 +31,13 @@ var _ = Describe("Check", func() {
 		stdout = strings.Builder{}
 		stderr = strings.Builder{}
 		cmd = &cobra.Command{RunE: check.RunE}
-		cmd.SetIn(stdin)
 		cmd.SetOut(&stdout)
 		cmd.SetErr(&stderr)
-		cmd.SetArgs([]string{}) // Don't let Ginkgo arguments get in the way
+		cmd.SetArgs([]string{}) // Don't let Ginkgo's arguments get in the way
 	})
 
 	JustBeforeEach(func(ctx SpecContext) {
+		cmd.SetIn(stdin)
 		err = cmd.ExecuteContext(ctx)
 	})
 

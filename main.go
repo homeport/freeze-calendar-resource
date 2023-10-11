@@ -24,7 +24,7 @@ var lintCommand = cobra.Command{
 	Use:   "lint",
 	Short: "Checks syntax and semantics of a freeze calendar file",
 	Args:  cobra.ExactArgs(1),
-	RunE:  lint.Run,
+	RunE:  lint.RunE,
 }
 
 var checkCommand = cobra.Command{
@@ -36,7 +36,7 @@ var checkCommand = cobra.Command{
 var getCommand = cobra.Command{
 	Use:   "get",
 	Short: "Fetches the latest version of the freeze calendar and, if within a freeze, fails or sleeps.",
-	Long: `Fetches the latest version of the freeze calendar and:
+	Long: `Fetches the latest version of the freeze calendar and
 
 * If FUSE, the resource simply fails.
 * If GATE, the resource sleeps while the current date and time are within a freeze window. This is re-tried every INTERVAL.`,
@@ -47,6 +47,7 @@ var getCommand = cobra.Command{
 var putCommand = cobra.Command{
 	Use:   "put",
 	Short: "no-op",
+	Args:  cobra.ExactArgs(1),
 	Run:   func(cmd *cobra.Command, args []string) { cmd.PrintErr("no-op") },
 }
 

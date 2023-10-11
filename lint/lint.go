@@ -10,7 +10,7 @@ import (
 
 var Verbose bool
 
-func Run(cmd *cobra.Command, args []string) error {
+func RunE(cmd *cobra.Command, args []string) error {
 	calendarFile, err := os.Open(args[0])
 
 	if err != nil {

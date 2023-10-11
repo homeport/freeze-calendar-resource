@@ -128,16 +128,23 @@ func RunE(cmd *cobra.Command, args []string) error {
 		}
 
 		// Now we know we are within a freeze window.
-		activeFreezeWindows = append(activeFreezeWindows, window)
-
-		// TODO Let's check if the scope matches.
+		// Let's check if the scope matches.
+		for _, rs := range request.Params.Scope {
+			for _, ws := range window.Scope {
+				if rs == ws {
+					activeFreezeWindows = append(activeFreezeWindows, window)
+				}
+			}
+		}
 	}
 
 	if len(activeFreezeWindows) > 0 {
 		if request.Params.Mode == Fuse {
-			return fmt.Errorf("fuse has blown because the following freeze windows are currently active: %s", strings.Join(mapFunc(activeFreezeWindows, func(w freeze.Window) string {
-				return w.String()
-			}), ", "))
+			return fmt.Errorf(
+				"fuse has blown because the following freeze windows are currently active for the scope %s: %s",
+				strings.Join(request.Params.Scope, ", "),
+				strings.Join(mapFunc(activeFreezeWindows, func(w freeze.Window) string { return w.String() }), ", "),
+			)
 		}
 	}
 
