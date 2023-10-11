@@ -1,7 +1,9 @@
 package freeze
 
 import (
+	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -13,6 +15,10 @@ type Window struct {
 	Start time.Time `yaml:"starts_at" validate:"required"`
 	End   time.Time `yaml:"ends_at" validate:"required"`
 	Scope []string  `yaml:"scope"`
+}
+
+func (w Window) String() string {
+	return fmt.Sprintf("%s from %s to %s; scope: %s", w.Name, w.Start, w.End, strings.Join(w.Scope, ", "))
 }
 
 type Calendar struct {

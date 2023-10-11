@@ -90,7 +90,7 @@ freeze_calendar:
 		BeforeEach(func() {
 			content = `
 freeze_calendar:
-  - name: ~
+  - name:
     starts_at: 2022-12-01T06:00:00Z
     ends_at: 2022-12-27T06:00:00Z
     scope:

@@ -64,7 +64,7 @@ func Run(cmd *cobra.Command, args []string) error {
 	calendar, err := freeze.LoadCalendar(calendarFile)
 
 	if err != nil {
-		return fmt.Errorf("unable to decode calendar: %w", err)
+		return fmt.Errorf("unable to load calendar: %w", err)
 	}
 
 	now := time.Now() // TODO use clock for testability
@@ -79,6 +79,8 @@ func Run(cmd *cobra.Command, args []string) error {
 			fmt.Fprintf(cmd.ErrOrStderr(), "Skipping window '%s' as its end %s is in the past (before %s)", window.Name, window.End.UTC(), now.UTC())
 			continue
 		}
+
+		// Now we know we are within a freeze window
 	}
 
 	response := resource.Response{
