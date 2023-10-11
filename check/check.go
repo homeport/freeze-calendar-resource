@@ -28,7 +28,7 @@ type Request struct {
 //	   },
 //	   "version": { "sha": "..." }
 //	}
-func Run(cmd *cobra.Command, args []string) error {
+func RunE(cmd *cobra.Command, args []string) error {
 	var request Request
 	err := json.NewDecoder(cmd.InOrStdin()).Decode(&request)
 

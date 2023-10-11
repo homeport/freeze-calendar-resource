@@ -30,7 +30,7 @@ var lintCommand = cobra.Command{
 var checkCommand = cobra.Command{
 	Use:   "check",
 	Short: "Fetches the latest freeze calendar and emit its version",
-	RunE:  check.Run,
+	RunE:  check.RunE,
 }
 
 var getCommand = cobra.Command{
@@ -41,7 +41,7 @@ var getCommand = cobra.Command{
 * If FUSE, the resource simply fails.
 * If GATE, the resource sleeps while the current date and time are within a freeze window. This is re-tried every INTERVAL.`,
 	Args: cobra.ExactArgs(1),
-	RunE: get.Run,
+	RunE: get.RunE,
 }
 
 var putCommand = cobra.Command{

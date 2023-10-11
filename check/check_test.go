@@ -30,14 +30,15 @@ var _ = Describe("Check", func() {
 			}`)
 		stdout = strings.Builder{}
 		stderr = strings.Builder{}
-		cmd = &cobra.Command{}
+		cmd = &cobra.Command{RunE: check.RunE}
 		cmd.SetIn(stdin)
 		cmd.SetOut(&stdout)
 		cmd.SetErr(&stderr)
+		cmd.SetArgs([]string{}) // Don't let Ginkgo arguments get in the way
 	})
 
 	JustBeforeEach(func() {
-		check.Run(cmd, []string{})
+		err = cmd.Execute()
 	})
 
 	It("executes successfully", func() {

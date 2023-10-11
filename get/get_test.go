@@ -37,14 +37,16 @@ var _ = Describe("Get", func() {
 
 		stdout = strings.Builder{}
 		stderr = strings.Builder{}
-		cmd = &cobra.Command{}
+
+		cmd = &cobra.Command{RunE: get.RunE}
+		cmd.SetArgs([]string{tmpDir})
 		cmd.SetIn(stdin)
 		cmd.SetOut(&stdout)
 		cmd.SetErr(&stderr)
 	})
 
 	JustBeforeEach(func() {
-		get.Run(cmd, []string{tmpDir})
+		err = cmd.Execute()
 	})
 
 	It("executes successfully", func() {

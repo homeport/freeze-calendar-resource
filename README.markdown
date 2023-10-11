@@ -49,7 +49,14 @@ Do not deploy if a window of the given `freeze-calendar` has the scope `eu-de` i
 # TODO
 
 * Allow [private repos](https://pkg.go.dev/github.com/go-git/go-git/v5#example-PlainClone-AccessToken)
-* Is it worth cloing into InMemory?
+* Is it worth cloning into InMemory?
+* What if we realize the freeze calendar is wrong and the get step is already running in `gate` mode?
+  We can't just push an update because the get step does not updates the repo while in front of the gate.
+
+  Options:
+  - One could argue that the whole build must be cancelled manually, and re-started after the updated calendar was pushed.
+  - Some other means of manual override could be used
+  - We could poll the repo continously, and move to the tip of the branch if there are new commits.
 * Add get parameter for `runway` (expected deploy time) in order to not start if there is not enough time left to complete the deployment before the next freeze begins
 * Get step writes the fetched freeze calendar to disk (for consumption by following tasks)
 

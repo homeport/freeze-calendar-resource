@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-git/go-git/v5"
@@ -52,7 +53,7 @@ func (m *Mode) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func Run(cmd *cobra.Command, args []string) error {
+func RunE(cmd *cobra.Command, args []string) error {
 	var request Request
 	err := json.NewDecoder(cmd.InOrStdin()).Decode(&request)
 
@@ -101,6 +102,7 @@ func Run(cmd *cobra.Command, args []string) error {
 	}
 
 	now := time.Now() // TODO use clock for testability
+	var activeFreezeWindows []freeze.Window
 
 	for _, window := range calendar.Windows {
 		if window.Start.After(now) {
@@ -113,7 +115,18 @@ func Run(cmd *cobra.Command, args []string) error {
 			continue
 		}
 
-		// Now we know we are within a freeze window
+		// Now we know we are within a freeze window.
+		activeFreezeWindows = append(activeFreezeWindows, window)
+
+		// TODO Let's check if the scope matches.
+	}
+
+	if len(activeFreezeWindows) > 0 {
+		if request.Params.Mode == Fuse {
+			return fmt.Errorf("fuse has blown because the following freeze windows are currently active: %s", strings.Join(mapFunc(activeFreezeWindows, func(w freeze.Window) string {
+				return w.String()
+			}), ", "))
+		}
 	}
 
 	response := resource.Response{
@@ -126,4 +139,15 @@ func Run(cmd *cobra.Command, args []string) error {
 	json.NewEncoder(cmd.OutOrStdout()).Encode(response)
 
 	return nil
+}
+
+// https://stackoverflow.com/a/71624929
+func mapFunc[T, U any](ts []T, f func(T) U) []U {
+	us := make([]U, len(ts))
+
+	for i := range ts {
+		us[i] = f(ts[i])
+	}
+
+	return us
 }
