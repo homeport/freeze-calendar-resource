@@ -14,8 +14,12 @@ var _ = Describe("Modi", func() {
 	var (
 		err     error
 		request io.Reader
-		params  get.Params
+		params  *get.Params
 	)
+
+	BeforeEach(func() {
+		params = nil
+	})
 
 	JustBeforeEach(func() {
 		err = json.NewDecoder(request).Decode(&params)

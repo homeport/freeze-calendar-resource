@@ -6,6 +6,7 @@ import (
 	"github.com/homeport/freeze-calendar-resource/check"
 	"github.com/homeport/freeze-calendar-resource/get"
 	"github.com/homeport/freeze-calendar-resource/lint"
+	"github.com/homeport/freeze-calendar-resource/put"
 	"github.com/spf13/cobra"
 )
 
@@ -30,7 +31,9 @@ var lintCommand = cobra.Command{
 var checkCommand = cobra.Command{
 	Use:   "check",
 	Short: "Fetches the latest freeze calendar and emit its version",
-	RunE:  check.RunE,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return check.Check(cmd.Context(), cmd.InOrStdin(), cmd.OutOrStdout(), cmd.ErrOrStderr())
+	},
 }
 
 var getCommand = cobra.Command{
@@ -41,14 +44,18 @@ var getCommand = cobra.Command{
 * If FUSE, the resource simply fails.
 * If GATE, the resource sleeps while the current date and time are within a freeze window. This is re-tried every INTERVAL.`,
 	Args: cobra.ExactArgs(1),
-	RunE: get.RunE,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return get.Get(cmd.Context(), cmd.InOrStdin(), cmd.OutOrStdout(), cmd.ErrOrStderr(), args[0])
+	},
 }
 
 var putCommand = cobra.Command{
 	Use:   "put",
 	Short: "no-op",
 	Args:  cobra.ExactArgs(1),
-	Run:   func(cmd *cobra.Command, args []string) { cmd.PrintErr("no-op") },
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return put.Put(cmd.Context(), cmd.InOrStdin(), cmd.OutOrStdout(), cmd.ErrOrStderr(), args[0])
+	},
 }
 
 func NewRootCommand() *cobra.Command {

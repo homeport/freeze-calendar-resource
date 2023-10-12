@@ -1,23 +1,19 @@
 package check
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 
 	"github.com/go-git/go-billy/v5"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/storage/memory"
 	"github.com/go-playground/validator/v10"
 	"github.com/homeport/freeze-calendar-resource/resource"
-	"github.com/spf13/cobra"
 )
 
-type Request struct {
-	Version resource.Version `json:"version,omitempty"`
-	Source  resource.Source  `json:"source"`
-}
-
-// Expected on STDIN:
+// Request:
 //
 //	{
 //	   "source": {
@@ -26,11 +22,15 @@ type Request struct {
 //		    "private_key": "((vault/my-key))"
 //		    "path": "examples/freeze-calendar.yaml"
 //	   },
-//	   "version": { "sha": "..." }
+//	   "version": { "sha": "..." } // may be present or not
 //	}
-func RunE(cmd *cobra.Command, args []string) error {
-	var request Request
-	err := json.NewDecoder(cmd.InOrStdin()).Decode(&request)
+//
+// Response:
+//
+// { "version": { "sha": "..." } }
+func Check(ctx context.Context, req io.Reader, resp, log io.Writer) error {
+	var request resource.Request
+	err := json.NewDecoder(req).Decode(&request)
 
 	if err != nil {
 		return err
@@ -70,7 +70,5 @@ func RunE(cmd *cobra.Command, args []string) error {
 		SHA: commit.Hash.String(),
 	}
 
-	json.NewEncoder(cmd.OutOrStdout()).Encode(response)
-
-	return nil
+	return json.NewEncoder(resp).Encode(response)
 }

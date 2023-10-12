@@ -1,8 +1,11 @@
 package get
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"strconv"
 	"strings"
 	"time"
@@ -14,17 +17,15 @@ import (
 	"github.com/homeport/freeze-calendar-resource/freeze"
 	"github.com/homeport/freeze-calendar-resource/resource"
 	"github.com/orsinium-labs/enum"
-	"github.com/spf13/cobra"
 )
 
-type Request struct {
-	Version resource.Version `json:"version,omitempty" validate:"required"`
-	Source  resource.Source  `json:"source" validate:"required"`
-	Params  Params           `json:"params"`
+type GetRequest struct {
+	resource.Request
+	Params Params `json:"params"`
 }
 
 type Params struct {
-	Mode  Mode     `json:"mode"`
+	Mode  Mode     `json:"mode" validate:"required"`
 	Scope []string `json:"scope"`
 	Debug bool     `json:"debug"`
 }
@@ -58,9 +59,9 @@ func (m *Mode) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func RunE(cmd *cobra.Command, args []string) error {
-	var request Request
-	err := json.NewDecoder(cmd.InOrStdin()).Decode(&request)
+func Get(ctx context.Context, req io.Reader, resp, log io.Writer, destination string) error {
+	var request GetRequest
+	err := json.NewDecoder(req).Decode(&request)
 
 	if err != nil {
 		return err
@@ -72,7 +73,7 @@ func RunE(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	repo, err := git.PlainClone(args[0], false, &git.CloneOptions{
+	repo, err := git.PlainClone(destination, false, &git.CloneOptions{
 		URL: request.Source.URI,
 	})
 
@@ -86,9 +87,11 @@ func RunE(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("unable to get worktree: %w", err)
 	}
 
-	err = worktree.Checkout(&git.CheckoutOptions{
-		Hash: plumbing.NewHash(request.Version.SHA),
-	})
+	if request.Version.SHA != "" {
+		err = worktree.Checkout(&git.CheckoutOptions{
+			Hash: plumbing.NewHash(request.Version.SHA),
+		})
+	}
 
 	if err != nil {
 		return fmt.Errorf("unable to checkout %s: %w", request.Version.SHA, err)
@@ -108,7 +111,7 @@ func RunE(cmd *cobra.Command, args []string) error {
 
 	var now time.Time
 
-	if value := cmd.Context().Value(ContextKeyClock); value != nil {
+	if value := ctx.Value(ContextKeyClock); value != nil {
 		now = value.(timeMachine.Clock).Now().UTC()
 	} else {
 		now = time.Now().UTC()
@@ -118,12 +121,12 @@ func RunE(cmd *cobra.Command, args []string) error {
 
 	for _, window := range calendar.Windows {
 		if window.Start.After(now) {
-			fmt.Fprintf(cmd.ErrOrStderr(), "Skipping window '%s' as its start %s is in the future (after %s)", window.Name, window.Start.UTC(), now.UTC())
+			fmt.Fprintf(log, "Skipping window '%s' as its start %s is in the future (after %s)", window.Name, window.Start.UTC(), now.UTC())
 			continue
 		}
 
 		if window.End.Before(now) {
-			fmt.Fprintf(cmd.ErrOrStderr(), "Skipping window '%s' as its end %s is in the past (before %s)", window.Name, window.End.UTC(), now.UTC())
+			fmt.Fprintf(log, "Skipping window '%s' as its end %s is in the past (before %s)", window.Name, window.End.UTC(), now.UTC())
 			continue
 		}
 
@@ -139,25 +142,34 @@ func RunE(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(activeFreezeWindows) > 0 {
-		if request.Params.Mode == Fuse {
+		switch request.Params.Mode {
+		case Fuse:
 			return fmt.Errorf(
 				"fuse has blown because the following freeze windows are currently active for the scope %s: %s",
 				strings.Join(request.Params.Scope, ", "),
 				strings.Join(mapFunc(activeFreezeWindows, func(w freeze.Window) string { return w.String() }), ", "),
 			)
+		case Gate:
+			return errors.New("gate mode not implemented yet")
+		default:
+			return fmt.Errorf("unknown mode %s", request.Params.Mode)
 		}
 	}
 
+	ref, err := repo.Head()
+
+	if err != nil {
+		return fmt.Errorf("unable to determine HEAD: %w", err)
+	}
+
 	response := resource.Response{
-		Version: request.Version,
+		Version: resource.Version{SHA: ref.Hash().String()},
 		Metadata: []resource.NameValuePair{
 			{Name: "number of freeze windows", Value: fmt.Sprintf("%d", len(calendar.Windows))},
 		},
 	}
 
-	json.NewEncoder(cmd.OutOrStdout()).Encode(response)
-
-	return nil
+	return json.NewEncoder(resp).Encode(response)
 }
 
 // https://stackoverflow.com/a/71624929

@@ -1,5 +1,10 @@
 package resource
 
+type Request struct {
+	Version Version `json:"version,omitempty"`
+	Source  Source  `json:"source" validate:"required"`
+}
+
 type Version struct {
 	SHA string `json:"sha"`
 }
@@ -10,12 +15,12 @@ type Source struct {
 	Path   string `json:"path" validate:"required,filepath"`
 }
 
-type NameValuePair struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
-}
-
 type Response struct {
 	Version  Version         `json:"version"`
 	Metadata []NameValuePair `json:"metadata,omitempty"`
+}
+
+type NameValuePair struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
 }

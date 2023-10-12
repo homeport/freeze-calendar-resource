@@ -15,16 +15,14 @@ import (
 	"github.com/homeport/freeze-calendar-resource/resource"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/spf13/cobra"
 )
 
 var _ = Describe("Get", func() {
 	var (
 		err    error
-		cmd    *cobra.Command
-		stdin  io.Reader
-		stdout strings.Builder
-		stderr strings.Builder
+		req    io.Reader
+		resp   strings.Builder
+		log    strings.Builder
 		tmpDir string
 		clock  *timeMachine.Mock
 		now    time.Time
@@ -32,94 +30,154 @@ var _ = Describe("Get", func() {
 
 	BeforeEach(func() {
 		tmpDir = GinkgoT().TempDir()
-		stdin = strings.NewReader(`{
-			"source": {
-				"uri": "https://github.com/homeport/freeze-calendar-resource",
-				"path": "examples/freeze-calendar.yaml"
-			},
-			"version": { "sha": "56dd3927d2582a332cacd5c282629293cd9a8870" },
-			"params": { "mode": "fuse", "scope": ["eu-de"] }
-		}`)
 
-		stdout = strings.Builder{}
-		stderr = strings.Builder{}
-
-		cmd = &cobra.Command{RunE: get.RunE}
-		cmd.SetArgs([]string{tmpDir})
-		cmd.SetOut(&stdout)
-		cmd.SetErr(&stderr)
-
+		resp = strings.Builder{}
+		log = strings.Builder{}
 		clock = timeMachine.NewMock()
 	})
 
 	JustBeforeEach(func(ctx SpecContext) {
-		cmd.SetIn(stdin)
 		clock.Set(now)
-		err = cmd.ExecuteContext(context.WithValue(ctx, get.ContextKeyClock, clock))
+		err = get.Get(
+			context.WithValue(ctx, get.ContextKeyClock, clock),
+			req,
+			&resp,
+			&log,
+			tmpDir,
+		)
 	})
 
-	It("executes successfully", func() {
-		Expect(err).ShouldNot(HaveOccurred())
-	})
-
-	Context("response on stdout", func() {
-		var response resource.Response
-
-		JustBeforeEach(func() {
-			err = json.NewDecoder(strings.NewReader(stdout.String())).Decode(&response)
+	Context("mode not specified", func() {
+		BeforeEach(func() {
+			req = strings.NewReader(`{
+				"source": {
+					"uri": "https://github.com/homeport/freeze-calendar-resource",
+					"path": "examples/freeze-calendar.yaml"
+				},
+				"version": { "sha": "56dd3927d2582a332cacd5c282629293cd9a8870" }
+			}`)
 		})
 
-		It("is valid JSON", func() {
-			Expect(err).NotTo(HaveOccurred())
+		It("fails", func() {
+			Expect(err).To(HaveOccurred())
 		})
 
-		It("has a SHA field with the expected value", func() {
-			Expect(response.Version).To(HaveField("SHA", Equal("56dd3927d2582a332cacd5c282629293cd9a8870")))
-		})
-	})
-
-	Context("calendar file", func() {
-		var content []byte
-
-		JustBeforeEach(func() {
-			content, err = os.ReadFile(filepath.Join(tmpDir, "examples/freeze-calendar.yaml"))
-			Expect(err).ToNot(HaveOccurred())
-		})
-
-		It("has some bytes", func() {
-			Expect(content).ToNot(BeEmpty())
+		It("has an error message", func() {
+			Expect(err).To(MatchError(ContainSubstring("validation for 'Mode' failed")))
 		})
 	})
 
-	Context("within the freeze", func() {
-		BeforeEach(func(ctx SpecContext) {
-			now = time.Unix(1671690195, 0)
+	Context("first run", func() { // Version not present
+		BeforeEach(func() {
+			req = strings.NewReader(`{
+				"source": {
+					"uri": "https://github.com/homeport/freeze-calendar-resource",
+					"path": "examples/freeze-calendar.yaml"
+				},
+				"params": { "mode": "fuse" }
+			}`)
 		})
 
-		Context("in scope", func() {
-			It("fails", func() {
-				Expect(err).To(HaveOccurred())
+		It("executes successfully", func() {
+			Expect(err).ShouldNot(HaveOccurred())
+		})
+
+		Context("response", func() {
+			var response resource.Response
+
+			JustBeforeEach(func() {
+				err = json.NewDecoder(strings.NewReader(resp.String())).Decode(&response)
 			})
 
-			It("has an error message", func() {
-				Expect(err).To(MatchError(ContainSubstring("fuse has blown")))
+			It("is valid JSON", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("has a SHA field that is not empty", func() {
+				Expect(response.Version).To(HaveField("SHA", Not(BeEmpty())))
+			})
+
+			It("has a SHA field that is not a very early version", func() {
+				Expect(response.Version).To(HaveField("SHA", Not(Equal("56dd3927d2582a332cacd5c282629293cd9a8870"))))
+			})
+		})
+	})
+
+	Context("fuse mode", func() {
+		BeforeEach(func() {
+			req = strings.NewReader(`{
+				"source": {
+					"uri": "https://github.com/homeport/freeze-calendar-resource",
+					"path": "examples/freeze-calendar.yaml"
+				},
+				"version": { "sha": "56dd3927d2582a332cacd5c282629293cd9a8870" },
+				"params": { "mode": "fuse", "scope": ["eu-de"] }
+			}`)
+		})
+
+		It("executes successfully", func() {
+			Expect(err).ShouldNot(HaveOccurred())
+		})
+
+		Context("response", func() {
+			var response resource.Response
+
+			JustBeforeEach(func() {
+				err = json.NewDecoder(strings.NewReader(resp.String())).Decode(&response)
+			})
+
+			It("is valid JSON", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("has a SHA field with the expected value", func() {
+				Expect(response.Version).To(HaveField("SHA", Equal("56dd3927d2582a332cacd5c282629293cd9a8870")))
 			})
 		})
 
-		Context("out of scope", func() {
-			BeforeEach(func() {
-				stdin = strings.NewReader(`{
-					"source": {
-						"uri": "https://github.com/homeport/freeze-calendar-resource",
-						"path": "examples/freeze-calendar.yaml"
-					},
-					"version": { "sha": "56dd3927d2582a332cacd5c282629293cd9a8870" },
-					"params": { "mode": "fuse", "scope": ["eu-gb"] }
-				}`)
-			})
+		Context("calendar file", func() {
+			var content []byte
 
-			It("succeeds", func() {
+			JustBeforeEach(func() {
+				content, err = os.ReadFile(filepath.Join(tmpDir, "examples/freeze-calendar.yaml"))
 				Expect(err).ToNot(HaveOccurred())
+			})
+
+			It("has some bytes", func() {
+				Expect(content).ToNot(BeEmpty())
+			})
+		})
+
+		Context("within the freeze", func() {
+			BeforeEach(func(ctx SpecContext) {
+				now = time.Unix(1671690195, 0)
+			})
+
+			Context("in scope", func() {
+				It("fails", func() {
+					Expect(err).To(HaveOccurred())
+				})
+
+				It("has an error message", func() {
+					Expect(err).To(MatchError(ContainSubstring("fuse has blown")))
+				})
+			})
+
+			Context("out of scope", func() {
+				BeforeEach(func() {
+					req = strings.NewReader(`{
+						"source": {
+							"uri": "https://github.com/homeport/freeze-calendar-resource",
+							"path": "examples/freeze-calendar.yaml"
+						},
+						"version": { "sha": "56dd3927d2582a332cacd5c282629293cd9a8870" },
+						"params": { "mode": "fuse", "scope": ["eu-gb"] }
+					}`)
+				})
+
+				It("succeeds", func() {
+					Expect(err).ToNot(HaveOccurred())
+				})
 			})
 		})
 	})
