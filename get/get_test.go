@@ -12,7 +12,6 @@ import (
 	timeMachine "github.com/benbjohnson/clock"
 
 	"github.com/homeport/freeze-calendar-resource/get"
-	"github.com/homeport/freeze-calendar-resource/resource"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -54,6 +53,7 @@ var _ = Describe("Get", func() {
 					"uri": "https://github.com/homeport/freeze-calendar-resource",
 					"path": "examples/freeze-calendar.yaml"
 				},
+				"params": {  },
 				"version": { "sha": "56dd3927d2582a332cacd5c282629293cd9a8870" }
 			}`)
 		})
@@ -64,42 +64,6 @@ var _ = Describe("Get", func() {
 
 		It("has an error message", func() {
 			Expect(err).To(MatchError(ContainSubstring("validation for 'Mode' failed")))
-		})
-	})
-
-	Context("first run", func() { // Version not present
-		BeforeEach(func() {
-			req = strings.NewReader(`{
-				"source": {
-					"uri": "https://github.com/homeport/freeze-calendar-resource",
-					"path": "examples/freeze-calendar.yaml"
-				},
-				"params": { "mode": "fuse" }
-			}`)
-		})
-
-		It("executes successfully", func() {
-			Expect(err).ShouldNot(HaveOccurred())
-		})
-
-		Context("response", func() {
-			var response resource.Response
-
-			JustBeforeEach(func() {
-				err = json.NewDecoder(strings.NewReader(resp.String())).Decode(&response)
-			})
-
-			It("is valid JSON", func() {
-				Expect(err).NotTo(HaveOccurred())
-			})
-
-			It("has a SHA field that is not empty", func() {
-				Expect(response.Version).To(HaveField("SHA", Not(BeEmpty())))
-			})
-
-			It("has a SHA field that is not a very early version", func() {
-				Expect(response.Version).To(HaveField("SHA", Not(Equal("56dd3927d2582a332cacd5c282629293cd9a8870"))))
-			})
 		})
 	})
 
@@ -120,7 +84,7 @@ var _ = Describe("Get", func() {
 		})
 
 		Context("response", func() {
-			var response resource.Response
+			var response get.Response
 
 			JustBeforeEach(func() {
 				err = json.NewDecoder(strings.NewReader(resp.String())).Decode(&response)

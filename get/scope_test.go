@@ -5,7 +5,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/homeport/freeze-calendar-resource/get"
+	"github.com/homeport/freeze-calendar-resource/resource"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -14,7 +14,7 @@ var _ = Describe("Scope", func() {
 	var (
 		err     error
 		request io.Reader
-		params  *get.Params
+		params  *resource.Params
 	)
 
 	BeforeEach(func() {

@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"strconv"
 	"strings"
 	"time"
 
@@ -16,51 +15,25 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/homeport/freeze-calendar-resource/freeze"
 	"github.com/homeport/freeze-calendar-resource/resource"
-	"github.com/orsinium-labs/enum"
 )
 
-type GetRequest struct {
+type Request struct {
 	resource.Request
-	Params Params `json:"params"`
+	Version resource.Version `json:"version" validate:"required"`
+	Params  resource.Params  `json:"params"`
 }
 
-type Params struct {
-	Mode  Mode     `json:"mode" validate:"required"`
-	Scope []string `json:"scope"`
-	Debug bool     `json:"debug"`
+type Response struct {
+	Version  resource.Version         `json:"version"`
+	Metadata []resource.NameValuePair `json:"metadata,omitempty"`
 }
-
-type Mode enum.Member[string]
-
-var (
-	Fuse = Mode{"fuse"}
-	Gate = Mode{"gate"}
-	Modi = enum.New(Fuse, Gate)
-)
 
 type ContextKey string
 
 const ContextKeyClock = ContextKey("clock")
 
-func (m *Mode) UnmarshalJSON(b []byte) error {
-	unquoted, err := strconv.Unquote(string(b))
-
-	if err != nil {
-		return err
-	}
-
-	parsed := Modi.Parse(unquoted)
-
-	if parsed == nil {
-		return fmt.Errorf("%s is not a valid mode, valid ones are %s", string(b), Modi.String())
-	}
-
-	*m = *parsed
-	return nil
-}
-
 func Get(ctx context.Context, req io.Reader, resp, log io.Writer, destination string) error {
-	var request GetRequest
+	var request Request
 	err := json.NewDecoder(req).Decode(&request)
 
 	if err != nil {
@@ -143,13 +116,13 @@ func Get(ctx context.Context, req io.Reader, resp, log io.Writer, destination st
 
 	if len(activeFreezeWindows) > 0 {
 		switch request.Params.Mode {
-		case Fuse:
+		case resource.Fuse:
 			return fmt.Errorf(
 				"fuse has blown because the following freeze windows are currently active for the scope %s: %s",
 				strings.Join(request.Params.Scope, ", "),
 				strings.Join(mapFunc(activeFreezeWindows, func(w freeze.Window) string { return w.String() }), ", "),
 			)
-		case Gate:
+		case resource.Gate:
 			return errors.New("gate mode not implemented yet")
 		default:
 			return fmt.Errorf("unknown mode %s", request.Params.Mode)
@@ -162,7 +135,7 @@ func Get(ctx context.Context, req io.Reader, resp, log io.Writer, destination st
 		return fmt.Errorf("unable to determine HEAD: %w", err)
 	}
 
-	response := resource.Response{
+	response := Response{
 		Version: resource.Version{SHA: ref.Hash().String()},
 		Metadata: []resource.NameValuePair{
 			{Name: "number of freeze windows", Value: fmt.Sprintf("%d", len(calendar.Windows))},

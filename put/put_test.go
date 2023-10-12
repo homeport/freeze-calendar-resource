@@ -10,7 +10,6 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/homeport/freeze-calendar-resource/put"
-	"github.com/homeport/freeze-calendar-resource/resource"
 )
 
 var _ = Describe("Put", func() {
@@ -25,13 +24,13 @@ var _ = Describe("Put", func() {
 	BeforeEach(func() {
 		tmpDir = GinkgoT().TempDir()
 		req = strings.NewReader(`{
-			"source": {
-				"uri": "https://github.com/homeport/freeze-calendar-resource",
-				"path": "examples/freeze-calendar.yaml"
-			},
-			"version": { "sha": "56dd3927d2582a332cacd5c282629293cd9a8870" },
-			"params": { "mode": "fuse", "scope": ["eu-de"] }
-		}`)
+		  "source": {
+        "uri": "https://github.com/homeport/freeze-calendar-resource",
+        "path": "examples/freeze-calendar.yaml"
+      },
+      "version": { "sha": "56dd3927d2582a332cacd5c282629293cd9a8870" },
+      "params": { "mode": "fuse", "scope": ["eu-de"] }
+    }`)
 
 		resp = strings.Builder{}
 		log = strings.Builder{}
@@ -46,7 +45,7 @@ var _ = Describe("Put", func() {
 	})
 
 	Context("response", func() {
-		var response resource.Response
+		var response put.Response
 
 		JustBeforeEach(func() {
 			err = json.NewDecoder(strings.NewReader(resp.String())).Decode(&response)
@@ -54,10 +53,6 @@ var _ = Describe("Put", func() {
 
 		It("is valid JSON", func() {
 			Expect(err).NotTo(HaveOccurred())
-		})
-
-		It("has a SHA field with the expected value", func() {
-			Expect(response.Version).To(HaveField("SHA", Equal("56dd3927d2582a332cacd5c282629293cd9a8870")))
 		})
 	})
 

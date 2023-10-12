@@ -5,7 +5,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/homeport/freeze-calendar-resource/get"
+	"github.com/homeport/freeze-calendar-resource/resource"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -14,7 +14,7 @@ var _ = Describe("Modi", func() {
 	var (
 		err     error
 		request io.Reader
-		params  *get.Params
+		params  *resource.Params
 	)
 
 	BeforeEach(func() {
@@ -39,7 +39,7 @@ var _ = Describe("Modi", func() {
 		})
 
 		It("has the expected mode", func() {
-			Expect(params.Mode).To(Equal(get.Fuse))
+			Expect(params.Mode).To(Equal(resource.Fuse))
 		})
 	})
 
@@ -57,7 +57,7 @@ var _ = Describe("Modi", func() {
 		})
 
 		It("has the expected mode", func() {
-			Expect(params.Mode).To(Equal(get.Gate))
+			Expect(params.Mode).To(Equal(resource.Gate))
 		})
 	})
 

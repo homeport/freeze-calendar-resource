@@ -20,13 +20,6 @@ var _ = Describe("Check", func() {
 	)
 
 	BeforeEach(func() {
-		req = strings.NewReader(`{
-				"source": {
-					"uri": "https://github.com/homeport/freeze-calendar-resource",
-					"path": "examples/freeze-calendar.yaml"
-				},
-				"version": { "sha": "56dd3927d2582a332cacd5c282629293cd9a8870" }
-			}`)
 		resp = strings.Builder{}
 		log = strings.Builder{}
 	})
@@ -35,27 +28,94 @@ var _ = Describe("Check", func() {
 		err = check.Check(ctx, req, &resp, &log)
 	})
 
-	It("executes successfully", func() {
-		Expect(err).ShouldNot(HaveOccurred())
+	Context("first request", func() { // Version not present
+		BeforeEach(func() {
+			req = strings.NewReader(`{
+				"source": {
+					"uri": "https://github.com/homeport/freeze-calendar-resource",
+					"path": "examples/freeze-calendar.yaml"
+				}
+			}`)
+		})
+
+		It("executes successfully", func() {
+			Expect(err).ShouldNot(HaveOccurred())
+		})
+
+		Context("response", func() {
+			var response check.Response
+
+			JustBeforeEach(func() {
+				err = json.NewDecoder(strings.NewReader(resp.String())).Decode(&response)
+			})
+
+			It("is valid JSON", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("have at least one version", func() {
+				Expect(response).ToNot(BeEmpty())
+			})
+
+			Context("latest version", func() {
+				var version resource.Version
+
+				JustBeforeEach(func() {
+					version = response[0]
+				})
+
+				It("produces valid JSON with a SHA field", func() {
+					Expect(version.SHA).NotTo(BeEmpty())
+				})
+			})
+		})
 	})
 
-	Context("response", func() {
-		var version resource.Version
-
-		JustBeforeEach(func() {
-			err = json.NewDecoder(strings.NewReader(resp.String())).Decode(&version)
+	Context("subsequent requests", func() {
+		BeforeEach(func() {
+			req = strings.NewReader(`{
+				"source": {
+					"uri": "https://github.com/homeport/freeze-calendar-resource",
+					"path": "examples/freeze-calendar.yaml"
+				},
+				"version": { "sha": "56dd3927d2582a332cacd5c282629293cd9a8870" }
+			}`)
 		})
 
-		It("produces valid JSON", func() {
-			Expect(err).NotTo(HaveOccurred())
+		It("executes successfully", func() {
+			Expect(err).ShouldNot(HaveOccurred())
 		})
 
-		It("produces valid JSON with a SHA field", func() {
-			Expect(version.SHA).NotTo(BeEmpty())
-		})
+		Context("response", func() {
+			var response check.Response
 
-		It("produces the expected SHA", func() {
-			Expect(version.SHA).To(Equal("56dd3927d2582a332cacd5c282629293cd9a8870"))
+			JustBeforeEach(func() {
+				err = json.NewDecoder(strings.NewReader(resp.String())).Decode(&response)
+			})
+
+			It("produces valid JSON", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("have at least one version", func() {
+				Expect(response).ToNot(BeEmpty())
+			})
+
+			Context("requested version", func() {
+				var version resource.Version
+
+				JustBeforeEach(func() {
+					version = response[0]
+				})
+
+				It("produces valid JSON with a SHA field", func() {
+					Expect(version.SHA).NotTo(BeEmpty())
+				})
+
+				It("produces the expected SHA", func() {
+					Expect(version.SHA).To(Equal("56dd3927d2582a332cacd5c282629293cd9a8870"))
+				})
+			})
 		})
 	})
 })

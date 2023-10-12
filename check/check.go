@@ -13,6 +13,13 @@ import (
 	"github.com/homeport/freeze-calendar-resource/resource"
 )
 
+type Request struct {
+	resource.Request
+	Version resource.Version `json:"version"`
+}
+
+type Response []resource.Version
+
 // Request:
 //
 //	{
@@ -27,9 +34,9 @@ import (
 //
 // Response:
 //
-// { "version": { "sha": "..." } }
+// [{ "version": { "sha": "..." } }]
 func Check(ctx context.Context, req io.Reader, resp, log io.Writer) error {
-	var request resource.Request
+	var request Request
 	err := json.NewDecoder(req).Decode(&request)
 
 	if err != nil {
@@ -66,9 +73,12 @@ func Check(ctx context.Context, req io.Reader, resp, log io.Writer) error {
 		return err
 	}
 
-	response := resource.Version{
-		SHA: commit.Hash.String(),
-	}
+	// TODO
+	// The list may be empty, if there are no versions available at the source.
+	// If the given version is already the latest, an array with that version as the sole entry should be listed.
+	// If your resource is unable to determine which versions are newer than the given version (e.g. if it's a git commit that was push -fed over), then the current version of your resource should be returned (i.e. the new HEAD).
+
+	response := []resource.Version{{SHA: commit.Hash.String()}}
 
 	return json.NewEncoder(resp).Encode(response)
 }
