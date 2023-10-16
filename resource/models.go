@@ -3,6 +3,7 @@ package resource
 import (
 	"errors"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
@@ -59,6 +60,7 @@ type NameValuePair struct {
 type Source struct {
 	URI        string `json:"uri" validate:"required"` // the git resource calls it uri, so we do it, too
 	PrivateKey string `json:"private_key"`
+	KnownHosts string `json:"known_hosts"`
 	Username   string `json:"username"`
 	Password   string `json:"password"`
 	Branch     string `json:"branch"`
@@ -86,7 +88,27 @@ func (source Source) Auth() (auth transport.AuthMethod, err error) {
 		)
 
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("could not create public key pair: %w", err)
+		}
+
+		if len(source.KnownHosts) != 0 {
+			f, err := os.CreateTemp("", "known-hosts-")
+
+			if err != nil {
+				return nil, fmt.Errorf("could not create temporary file for known_hosts: %w", err)
+			}
+
+			_, err = f.Write([]byte(source.KnownHosts))
+
+			if err != nil {
+				return nil, fmt.Errorf("could not write contents of SSH_KNOWN_HOSTS to %s: %w", f.Name(), err)
+			}
+
+			err = os.Setenv("SSH_KNOWN_HOSTS", f.Name()) // simpler than dealing with ssh.HostKeyCallback
+
+			if err != nil {
+				return nil, fmt.Errorf("could not change env var SSH_KNOWN_HOSTS to point to %s: %w", f.Name(), err)
+			}
 		}
 	}
 
