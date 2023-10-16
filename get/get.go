@@ -119,14 +119,15 @@ func Get(ctx context.Context, req io.Reader, resp, log io.Writer, destination st
 		}
 
 		// Now we know we are within a freeze window.
-		// Let's check if the scope matches.
-
-		// TODO Handle empty scope
-
-		for _, rs := range request.Params.Scope {
-			for _, ws := range window.Scope {
-				if rs == ws {
-					activeFreezeWindows = append(activeFreezeWindows, window)
+		// Let's check if the scope matches. No scope means all windows are considered matching.
+		if len(request.Params.Scope) == 0 {
+			activeFreezeWindows = append(activeFreezeWindows, window)
+		} else {
+			for _, rs := range request.Params.Scope {
+				for _, ws := range window.Scope {
+					if rs == ws {
+						activeFreezeWindows = append(activeFreezeWindows, window)
+					}
 				}
 			}
 		}
