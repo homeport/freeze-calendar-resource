@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/go-git/go-billy/v5"
+	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/storage/memory"
 	"github.com/go-playground/validator/v10"
+	"github.com/homeport/freeze-calendar-resource/githelpers"
 	"github.com/homeport/freeze-calendar-resource/resource"
 )
 
@@ -40,23 +42,53 @@ func Check(ctx context.Context, req io.Reader, resp, log io.Writer) error {
 	err := json.NewDecoder(req).Decode(&request)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to decode request: %w", err)
 	}
 
 	err = validator.New(validator.WithRequiredStructEnabled()).Struct(request)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("request validation failed: %w", err)
 	}
 
-	var worktree billy.Filesystem // leaving this as nil so that we get a bare repo
+	auth, err := request.Source.Auth()
 
-	repo, err := git.Clone(memory.NewStorage(), worktree, &git.CloneOptions{
-		URL: request.Source.URI,
+	if err != nil {
+		return fmt.Errorf("unable to build authenticator: %w", err)
+	}
+
+	fs := memfs.New()
+
+	repo, err := git.Clone(memory.NewStorage(), fs, &git.CloneOptions{
+		URL:      request.Source.URI,
+		Auth:     auth,
+		Progress: log,
 	})
 
 	if err != nil {
 		return fmt.Errorf("unable to clone: %w", err)
+	}
+
+	worktree, err := repo.Worktree()
+
+	if err != nil {
+		return fmt.Errorf("unable to get worktree: %w", err)
+	}
+
+	if request.Version.SHA == "" {
+		if request.Source.Branch == "" {
+			// TODO Is this the tip of the default branch?
+		} else {
+			err = githelpers.CheckoutBranch(repo, request.Source.Branch)
+		}
+	} else {
+		err = worktree.Checkout(&git.CheckoutOptions{
+			Hash: plumbing.NewHash(request.Version.SHA),
+		})
+	}
+
+	if err != nil {
+		return fmt.Errorf("unable to checkout %s: %w", request.Version.SHA, err)
 	}
 
 	cIter, err := repo.Log(&git.LogOptions{PathFilter: func(s string) bool {
@@ -64,13 +96,13 @@ func Check(ctx context.Context, req io.Reader, resp, log io.Writer) error {
 	}})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("could not log the history: %w", err)
 	}
 
 	commit, err := cIter.Next()
 
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to go to the first commit: %w", err)
 	}
 
 	// TODO

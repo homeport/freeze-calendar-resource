@@ -86,6 +86,4 @@ Update the calendar and push the changes:
 
 # TODO
 
-* Allow [private repos](https://pkg.go.dev/github.com/go-git/go-git/v5#example-PlainClone-AccessToken)
-* Is it worth cloning into InMemory?
 * Add get parameter for `runway` (expected deploy time) in order to not start if there is not enough time left to complete the deployment before the next freeze begins

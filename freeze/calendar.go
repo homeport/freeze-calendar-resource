@@ -14,7 +14,7 @@ type Window struct {
 	Name  string    `yaml:"name" validate:"required"`
 	Start time.Time `yaml:"starts_at" validate:"required"`
 	End   time.Time `yaml:"ends_at" validate:"required,gtcsfield=Start"`
-	Scope []string  `yaml:"scope"`
+	Scope []string  `yaml:"scope,omitempty"`
 }
 
 func (w Window) String() string {

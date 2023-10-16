@@ -14,6 +14,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-playground/validator/v10"
 	"github.com/homeport/freeze-calendar-resource/freeze"
+	"github.com/homeport/freeze-calendar-resource/githelpers"
 	"github.com/homeport/freeze-calendar-resource/resource"
 )
 
@@ -46,8 +47,16 @@ func Get(ctx context.Context, req io.Reader, resp, log io.Writer, destination st
 		return err
 	}
 
+	auth, err := request.Source.Auth()
+
+	if err != nil {
+		return err
+	}
+
 	repo, err := git.PlainClone(destination, false, &git.CloneOptions{
-		URL: request.Source.URI,
+		URL:      request.Source.URI,
+		Auth:     auth,
+		Progress: log,
 	})
 
 	if err != nil {
@@ -60,7 +69,13 @@ func Get(ctx context.Context, req io.Reader, resp, log io.Writer, destination st
 		return fmt.Errorf("unable to get worktree: %w", err)
 	}
 
-	if request.Version.SHA != "" {
+	if request.Version.SHA == "" {
+		if request.Source.Branch == "" {
+			// TODO Is this the tip of the default branch?
+		} else {
+			err = githelpers.CheckoutBranch(repo, request.Source.Branch)
+		}
+	} else {
 		err = worktree.Checkout(&git.CheckoutOptions{
 			Hash: plumbing.NewHash(request.Version.SHA),
 		})
@@ -94,17 +109,20 @@ func Get(ctx context.Context, req io.Reader, resp, log io.Writer, destination st
 
 	for _, window := range calendar.Windows {
 		if window.Start.After(now) {
-			fmt.Fprintf(log, "Skipping window '%s' as its start %s is in the future (after %s)", window.Name, window.Start.UTC(), now.UTC())
+			fmt.Fprintf(log, "Skipping window '%s' as its start %s is in the future (after %s)\n", window.Name, window.Start.UTC(), now.UTC())
 			continue
 		}
 
 		if window.End.Before(now) {
-			fmt.Fprintf(log, "Skipping window '%s' as its end %s is in the past (before %s)", window.Name, window.End.UTC(), now.UTC())
+			fmt.Fprintf(log, "Skipping window '%s' as its end %s is in the past (before %s)\n", window.Name, window.End.UTC(), now.UTC())
 			continue
 		}
 
 		// Now we know we are within a freeze window.
 		// Let's check if the scope matches.
+
+		// TODO Handle empty scope
+
 		for _, rs := range request.Params.Scope {
 			for _, ws := range window.Scope {
 				if rs == ws {
