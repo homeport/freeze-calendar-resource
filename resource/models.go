@@ -20,7 +20,6 @@ type Request struct {
 type Params struct {
 	Mode  Mode     `json:"mode" validate:"required"`
 	Scope []string `json:"scope"`
-	Debug bool     `json:"debug"`
 }
 
 type Mode enum.Member[string]
@@ -65,6 +64,7 @@ type Source struct {
 	Password   string `json:"password"`
 	Branch     string `json:"branch"`
 	Path       string `json:"path" validate:"required,filepath"`
+	Debug      bool   `json:"debug"`
 }
 
 func (source Source) Auth() (auth transport.AuthMethod, err error) {
@@ -81,7 +81,7 @@ func (source Source) Auth() (auth transport.AuthMethod, err error) {
 		}
 
 		auth, err = ssh.NewPublicKeys(
-			// there seems to be no good library for parsing git URLs, this is the poor man's approach.
+			// there seems to be no good library for parsing git URLs; this is the poor man's approach.
 			strings.SplitN(source.URI, "@", 2)[0],
 			[]byte(source.PrivateKey),
 			"",
