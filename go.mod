@@ -11,6 +11,7 @@ require (
 	github.com/onsi/gomega v1.28.0
 	github.com/orsinium-labs/enum v1.3.0
 	github.com/spf13/cobra v1.7.0
+	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
 	gopkg.in/yaml.v3 v3.0.1
 )
 
