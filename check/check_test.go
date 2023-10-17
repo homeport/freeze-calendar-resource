@@ -181,4 +181,95 @@ var _ = Describe("Check", func() {
 			})
 		})
 	})
+
+	// This will break when we ever update examples/freeze-calendar.yaml
+	Context("requesting the latest version", func() {
+		BeforeEach(func() {
+			req = strings.NewReader(`{
+				"source": {
+					"uri": "https://github.com/homeport/freeze-calendar-resource",
+					"path": "examples/freeze-calendar.yaml"
+				},
+				"version": { "sha": "6d78528138da1a6f536601d30a3967a4004b71b7" }
+			}`)
+		})
+
+		It("executes successfully", func() {
+			Expect(err).ShouldNot(HaveOccurred())
+		})
+
+		Context("response", func() {
+			var response check.Response
+
+			JustBeforeEach(func() {
+				err = json.NewDecoder(strings.NewReader(resp.String())).Decode(&response)
+			})
+
+			It("produces valid JSON", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("have just the latest version", func() {
+				Expect(len(response)).To(Equal(1))
+			})
+
+			Context("sole version", func() {
+				var latestVersion resource.Version
+
+				JustBeforeEach(func() {
+					latestVersion = response[0]
+				})
+
+				// This will break when we ever update examples/freeze-calendar.yaml
+				It("has the latest SHA", func() {
+					Expect(latestVersion.SHA).To(Equal("6d78528138da1a6f536601d30a3967a4004b71b7"))
+				})
+			})
+		})
+	})
+
+	Context("requesting an non-existing version", func() {
+		BeforeEach(func() {
+			req = strings.NewReader(`{
+				"source": {
+					"uri": "https://github.com/homeport/freeze-calendar-resource",
+					"path": "examples/freeze-calendar.yaml"
+				},
+				"version": { "sha": "foobar56dd3927d2582a35c282629293cd9a8870" }
+			}`)
+		})
+
+		It("executes successfully", func() {
+			Expect(err).ShouldNot(HaveOccurred())
+		})
+
+		Context("response", func() {
+			var response check.Response
+
+			JustBeforeEach(func() {
+				err = json.NewDecoder(strings.NewReader(resp.String())).Decode(&response)
+			})
+
+			It("produces valid JSON", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("have just the latest version", func() {
+				Expect(len(response)).To(Equal(1))
+			})
+
+			Context("sole version", func() {
+				var latestVersion resource.Version
+
+				JustBeforeEach(func() {
+					latestVersion = response[0]
+				})
+
+				// This will break when we ever update examples/freeze-calendar.yaml
+				It("has the latest SHA", func() {
+					Expect(latestVersion.SHA).To(Equal("6d78528138da1a6f536601d30a3967a4004b71b7"))
+				})
+			})
+		})
+	})
 })

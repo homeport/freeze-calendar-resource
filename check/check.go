@@ -90,10 +90,8 @@ func Check(ctx context.Context, req io.Reader, resp, log io.Writer) error {
 		return fmt.Errorf("could not log the history: %w", err)
 	}
 
-	// TODO
-	// The list may be empty, if there are no versions available at the source.
-	// If the given version is already the latest, an array with that version as the sole entry should be listed.
-	// If your resource is unable to determine which versions are newer than the given version (e.g. if it's a git commit that was push -fed over), then the current version of your resource should be returned (i.e. the new HEAD).
+	// "The list may be empty, if there are no versions available at the source."
+	// TODO When would that happen? If the repo or branch doesn't exist?
 
 	var response []resource.Version
 
@@ -107,21 +105,22 @@ func Check(ctx context.Context, req io.Reader, resp, log io.Writer) error {
 		return fmt.Errorf("could not iterate over commits: %w", err)
 	}
 
-	// ... must print the array of new versions, in chronological order (oldest first)
+	// "... must print the array of new versions, in chronological order (oldest first)"
 	// from https://concourse-ci.org/implementing-resource-types.html#resource-check
 	slices.Reverse(response)
 
-	// If provided, return only versions newer than the requested one
+	// If a version is provided in the request, return only versions newer than the requested one
 	if request.Version.SHA != "" {
 		i, found := slices.BinarySearchFunc(response, resource.Version{SHA: request.Version.SHA}, func(a, b resource.Version) int {
 			return cmp.Compare(a.SHA, b.SHA)
 		})
 
-		if !found {
-			return fmt.Errorf("could not find requested SHA %s in repo", request.Version.SHA)
+		if found {
+			response = response[i:]
+		} else {
+			// "If your resource is unable to determine which versions are newer than the given version (e.g. if it's a git commit that was push -fed over), then the current version of your resource should be returned (i.e. the new HEAD)."
+			response = []resource.Version{response[len(response)-1]}
 		}
-
-		response = response[i:]
 	}
 
 	return json.NewEncoder(resp).Encode(response)
