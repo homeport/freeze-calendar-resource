@@ -137,7 +137,7 @@ func Get(ctx context.Context, req io.Reader, resp, log io.Writer, destination st
 		switch request.Params.Mode {
 		case resource.Fuse:
 			return fmt.Errorf(
-				"fuse has blown because the following freeze windows are currently active for the scope %s: %s",
+				"fuse has blown because the following freeze windows are currently active for the configured scope '%s': %s",
 				strings.Join(request.Params.Scope, ", "),
 				strings.Join(mapFunc(activeFreezeWindows, func(w freeze.Window) string { return w.String() }), ", "),
 			)
