@@ -69,17 +69,17 @@ func Get(ctx context.Context, req io.Reader, resp, log io.Writer, destination st
 		return fmt.Errorf("unable to get worktree: %w", err)
 	}
 
-	if request.Version.SHA == "" {
-		if request.Source.Branch == "" {
-			// TODO Is this the tip of the default branch?
-		} else {
-			err = githelpers.CheckoutBranch(repo, request.Source.Branch)
+	if request.Source.Branch != "" {
+		err = githelpers.CheckoutBranch(repo, request.Source.Branch)
+
+		if err != nil {
+			return fmt.Errorf("unable to switch to branch %s: %w", request.Source.Branch, err)
 		}
-	} else {
-		err = worktree.Checkout(&git.CheckoutOptions{
-			Hash: plumbing.NewHash(request.Version.SHA),
-		})
 	}
+
+	err = worktree.Checkout(&git.CheckoutOptions{
+		Hash: plumbing.NewHash(request.Version.SHA),
+	})
 
 	if err != nil {
 		return fmt.Errorf("unable to checkout %s: %w", request.Version.SHA, err)

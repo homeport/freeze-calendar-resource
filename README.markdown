@@ -87,4 +87,5 @@ Update the calendar and push the changes:
 
 # TODO
 
+* Gate mode
 * Add get parameter for `runway` (expected deploy time) in order to not start if there is not enough time left to complete the deployment before the next freeze begins
