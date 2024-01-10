@@ -127,13 +127,17 @@ func Get(ctx context.Context, req io.Reader, resp, log io.Writer, destination st
 				for _, ws := range window.Scope {
 					if rs == ws {
 						activeFreezeWindows = append(activeFreezeWindows, window)
+					} else {
+						fmt.Fprintf(log, "Skipping window '%s' as its scope %s does not match the request scope %s\n", window, ws, rs)
 					}
 				}
 			}
 		}
 	}
 
-	if len(activeFreezeWindows) > 0 {
+	if len(activeFreezeWindows) == 0 {
+		fmt.Fprintln(log, "No windows matching")
+	} else {
 		switch request.Params.Mode {
 		case resource.Fuse:
 			return fmt.Errorf(
