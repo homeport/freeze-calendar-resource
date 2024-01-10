@@ -25,17 +25,24 @@ func Put(ctx context.Context, req io.Reader, resp, log io.Writer, source string)
 	err := json.NewDecoder(req).Decode(&request)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to build decoder: %w", err)
 	}
 
 	err = validator.New(validator.WithRequiredStructEnabled()).Struct(request)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to build validator: %w", err)
 	}
 
 	fmt.Fprintln(log, "no-op")
 
 	response := Response{} // no version as we don't put anything
-	return json.NewEncoder(resp).Encode(response)
+
+	err = json.NewEncoder(resp).Encode(response)
+
+	if err != nil {
+		return fmt.Errorf("unable to encode response as JSON: %w", err)
+	}
+
+	return nil
 }

@@ -38,19 +38,19 @@ func Get(ctx context.Context, req io.Reader, resp, log io.Writer, destination st
 	err := json.NewDecoder(req).Decode(&request)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to build decoder: %w", err)
 	}
 
 	err = validator.New(validator.WithRequiredStructEnabled()).Struct(request)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to build validator: %w", err)
 	}
 
 	auth, err := request.Source.Auth()
 
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to build authenticator: %w", err)
 	}
 
 	repo, err := git.PlainClone(destination, false, &git.CloneOptions{

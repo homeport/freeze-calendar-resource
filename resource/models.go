@@ -31,10 +31,11 @@ var (
 )
 
 func (m *Mode) UnmarshalJSON(b []byte) error {
-	unquoted, err := strconv.Unquote(string(b))
+	rawMode := string(b)
+	unquoted, err := strconv.Unquote(rawMode)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to unquote raw mode '%s': %w", rawMode, err)
 	}
 
 	parsed := Modi.Parse(unquoted)

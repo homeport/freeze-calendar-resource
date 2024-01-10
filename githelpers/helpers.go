@@ -32,7 +32,7 @@ func CheckoutBranch(repo *git.Repository, name string) error {
 	worktree, err := repo.Worktree()
 
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to get worktree: %w", err)
 	}
 
 	worktree.Checkout(&git.CheckoutOptions{

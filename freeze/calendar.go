@@ -30,13 +30,13 @@ func LoadCalendar(reader io.Reader) (*Calendar, error) {
 	err := yaml.NewDecoder(reader).Decode(&calendar)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to build decoder: %w", err)
 	}
 
 	err = validator.New(validator.WithRequiredStructEnabled()).Struct(calendar)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to build validator: %w", err)
 	}
 
 	return &calendar, nil

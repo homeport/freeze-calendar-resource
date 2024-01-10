@@ -20,7 +20,7 @@ func RunE(cmd *cobra.Command, args []string) error {
 	calendar, err := freeze.LoadCalendar(calendarFile)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to load calendar: %w", err)
 	}
 
 	if Verbose {
@@ -40,5 +40,5 @@ func RunE(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	return err
+	return nil
 }
