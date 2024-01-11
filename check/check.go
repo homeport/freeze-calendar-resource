@@ -71,7 +71,22 @@ func Check(ctx context.Context, req io.Reader, resp, log io.Writer) error {
 		return fmt.Errorf("unable to clone: %w", err)
 	}
 
-	if request.Source.Branch != "" {
+	head, err := repo.Head()
+
+	if err != nil {
+		return fmt.Errorf("unable to determine head: %w", err)
+	}
+
+	// Assuming that head.Name().IsBranch() is always true
+
+	shortHeadName := head.Name().Short()
+
+	if request.Source.Branch == "" {
+		fmt.Fprintf(log, "using default remote branch %s\n", shortHeadName)
+	} else if request.Source.Branch == shortHeadName {
+		fmt.Fprintf(log, "%s already checked out\n", shortHeadName)
+	} else {
+		fmt.Fprintf(log, "checking branch %s\n", request.Source.Branch)
 		err = githelpers.CheckoutBranch(repo, request.Source.Branch)
 
 		if err != nil {
