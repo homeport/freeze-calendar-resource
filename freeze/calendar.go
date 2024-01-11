@@ -17,8 +17,14 @@ type Window struct {
 	Scope []string  `yaml:"scope,omitempty"`
 }
 
-func (w Window) String() string {
-	return fmt.Sprintf("%s from %s to %s; scope: %s", w.Name, w.Start, w.End, strings.Join(w.Scope, ", "))
+func (w Window) String() (result string) {
+	result = fmt.Sprintf("%s from %s to %s", w.Name, w.Start, w.End)
+
+	if len(w.Scope) > 0 {
+		result += fmt.Sprintf("; scope: %s", strings.Join(w.Scope, ", "))
+	}
+
+	return
 }
 
 type Calendar struct {

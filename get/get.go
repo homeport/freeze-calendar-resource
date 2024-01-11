@@ -124,11 +124,16 @@ func Get(ctx context.Context, req io.Reader, resp, log io.Writer, destination st
 			activeFreezeWindows = append(activeFreezeWindows, window)
 		} else {
 			for _, rs := range request.Params.Scope {
-				for _, ws := range window.Scope {
-					if rs == ws {
-						activeFreezeWindows = append(activeFreezeWindows, window)
-					} else {
-						fmt.Fprintf(log, "Skipping window '%s' as its scope %s does not match the configured scope %s\n", window, ws, rs)
+				if len(window.Scope) == 0 {
+					fmt.Fprintf(log, "Adding window '%s' as it is not restricted to any scopes\n", window)
+					activeFreezeWindows = append(activeFreezeWindows, window)
+				} else {
+					for _, ws := range window.Scope {
+						if rs == ws {
+							activeFreezeWindows = append(activeFreezeWindows, window)
+						} else {
+							fmt.Fprintf(log, "Skipping window '%s' as its scope %s does not match the configured scope %s\n", window, ws, rs)
+						}
 					}
 				}
 			}
@@ -141,9 +146,9 @@ func Get(ctx context.Context, req io.Reader, resp, log io.Writer, destination st
 		switch request.Params.Mode {
 		case resource.Fuse:
 			return fmt.Errorf(
-				"fuse has blown because the following freeze windows are currently active for the configured scope '%s': %s",
+				"fuse has blown because the following freeze windows are currently active for the configured scope %s:\n%s",
 				strings.Join(request.Params.Scope, ", "),
-				strings.Join(mapFunc(activeFreezeWindows, func(w freeze.Window) string { return w.String() }), ", "),
+				strings.Join(mapFunc(activeFreezeWindows, func(w freeze.Window) string { return w.String() }), "\n"),
 			)
 		case resource.Gate:
 			return errors.New("gate mode not implemented yet")
