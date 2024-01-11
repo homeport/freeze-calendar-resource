@@ -128,7 +128,7 @@ func Get(ctx context.Context, req io.Reader, resp, log io.Writer, destination st
 					if rs == ws {
 						activeFreezeWindows = append(activeFreezeWindows, window)
 					} else {
-						fmt.Fprintf(log, "Skipping window '%s' as its scope %s does not match the request scope %s\n", window, ws, rs)
+						fmt.Fprintf(log, "Skipping window '%s' as its scope %s does not match the configured scope %s\n", window, ws, rs)
 					}
 				}
 			}
