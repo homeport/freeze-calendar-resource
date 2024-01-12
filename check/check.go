@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/storage/memory"
 	"github.com/go-playground/validator/v10"
@@ -86,11 +87,20 @@ func Check(ctx context.Context, req io.Reader, resp, log io.Writer) error {
 	} else if request.Source.Branch == shortHeadName {
 		fmt.Fprintf(log, "%s already checked out\n", shortHeadName)
 	} else {
-		fmt.Fprintf(log, "checking branch %s\n", request.Source.Branch)
-		err = githelpers.CheckoutBranch(repo, request.Source.Branch)
+		fmt.Fprintf(log, "checking out branch %s\n", request.Source.Branch)
+
+		branchName := plumbing.NewRemoteReferenceName("origin", request.Source.Branch)
+
+		_, err := repo.Branch(string(branchName))
 
 		if err != nil {
-			return fmt.Errorf("unable to checkout %s: %w", request.Version.SHA, err)
+			return fmt.Errorf("%s %w", branchName, err) // branch does not exist
+		}
+
+		err = githelpers.CheckoutBranch(repo, branchName.Short())
+
+		if err != nil {
+			return fmt.Errorf("unable to checkout %s: %w", branchName, err)
 		}
 	}
 

@@ -68,7 +68,7 @@ var _ = Describe("Get", func() {
 	})
 
 	Context("fuse mode", func() {
-		Context("without scope", func() {
+		Context("request without scope", func() {
 			BeforeEach(func() {
 				req = strings.NewReader(`{
 					"source": {
@@ -84,9 +84,9 @@ var _ = Describe("Get", func() {
 				Expect(err).ShouldNot(HaveOccurred())
 			})
 
-			Context("within the freeze", func() {
-				BeforeEach(func(ctx SpecContext) {
-					now = time.Unix(1671690195, 0)
+			Context("within the Holiday Season (regional freeze)", func() {
+				BeforeEach(func() {
+					now = time.Unix(1671690195, 0) // 2022-12-22T07:23:15+01:00
 				})
 
 				It("fails", func() {
@@ -99,7 +99,7 @@ var _ = Describe("Get", func() {
 			})
 		})
 
-		Context("with scope", func() {
+		Context("request with scope", func() {
 			BeforeEach(func() {
 				req = strings.NewReader(`{
 					"source": {
@@ -107,7 +107,10 @@ var _ = Describe("Get", func() {
 						"path": "examples/freeze-calendar.yaml"
 					},
 					"version": { "sha": "56dd3927d2582a332cacd5c282629293cd9a8870" },
-					"params": { "mode": "fuse", "scope": ["eu-de"] }
+					"params": {
+						"mode": "fuse",
+						"scope": ["eu-de"]
+					}
 				}`)
 			})
 
@@ -144,9 +147,34 @@ var _ = Describe("Get", func() {
 				})
 			})
 
-			Context("within the freeze", func() {
-				BeforeEach(func(ctx SpecContext) {
-					now = time.Unix(1671690195, 0)
+			Context("within the 2023 FIFA Women's World Cup (global freeze)", func() {
+				BeforeEach(func() {
+					now = time.Unix(1691780400, 0) // 2023-08-11T19:00:00Z
+					req = strings.NewReader(`{
+						"source": {
+							"uri": "https://github.com/homeport/freeze-calendar-resource",
+							"path": "examples/freeze-calendar.yaml"
+						},
+						"version": { "sha": "6d78528138da1a6f536601d30a3967a4004b71b7" },
+						"params": {
+							"mode": "fuse",
+							"scope": ["eu-de"]
+						}
+					}`)
+				})
+
+				It("fails", func() {
+					Expect(err).To(HaveOccurred())
+				})
+
+				It("has an error message", func() {
+					Expect(err).To(MatchError(ContainSubstring("fuse has blown")))
+				})
+			})
+
+			Context("within the Holiday Season (regional freeze)", func() {
+				BeforeEach(func() {
+					now = time.Unix(1671690195, 0) // 2022-12-22T07:23:15+01:00
 				})
 
 				Context("in scope", func() {
@@ -162,13 +190,13 @@ var _ = Describe("Get", func() {
 				Context("out of scope", func() {
 					BeforeEach(func() {
 						req = strings.NewReader(`{
-						"source": {
-							"uri": "https://github.com/homeport/freeze-calendar-resource",
-							"path": "examples/freeze-calendar.yaml"
-						},
-						"version": { "sha": "56dd3927d2582a332cacd5c282629293cd9a8870" },
-						"params": { "mode": "fuse", "scope": ["eu-gb"] }
-					}`)
+							"source": {
+								"uri": "https://github.com/homeport/freeze-calendar-resource",
+								"path": "examples/freeze-calendar.yaml"
+							},
+							"version": { "sha": "56dd3927d2582a332cacd5c282629293cd9a8870" },
+							"params": { "mode": "fuse", "scope": ["eu-gb"] }
+						}`)
 					})
 
 					It("succeeds", func() {

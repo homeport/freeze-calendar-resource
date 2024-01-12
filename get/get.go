@@ -134,7 +134,7 @@ func Get(ctx context.Context, req io.Reader, resp, log io.Writer, destination st
 		}
 
 		// Now we know we are within a freeze window.
-		// Let's check if the scope matches. No scope means all windows are considered matching.
+		// Let's check if the scope matches. No scope in a window or the request means all windows are considered matching, as long as the dates match.
 		if len(request.Params.Scope) == 0 {
 			activeFreezeWindows = append(activeFreezeWindows, window)
 		} else {
@@ -172,14 +172,15 @@ func Get(ctx context.Context, req io.Reader, resp, log io.Writer, destination st
 		}
 	}
 
-	ref, err := repo.Head()
+	// re-read the _actual_ head, regardless of any branch switches made before
+	head, err = repo.Head()
 
 	if err != nil {
-		return fmt.Errorf("unable to determine HEAD: %w", err)
+		return fmt.Errorf("unable to determine actual HEAD: %w", err)
 	}
 
 	response := Response{
-		Version: resource.Version{SHA: ref.Hash().String()},
+		Version: resource.Version{SHA: head.Hash().String()},
 		Metadata: []resource.NameValuePair{
 			{Name: "number of freeze windows", Value: fmt.Sprintf("%d", len(calendar.Windows))},
 		},
