@@ -86,7 +86,41 @@ var _ = Describe("Get", func() {
 
 			Context("within the Holiday Season (regional freeze)", func() {
 				BeforeEach(func() {
-					now = time.Unix(1671690195, 0) // 2022-12-22T07:23:15+01:00
+					now = time.Unix(1671690195, 0) // 2022-12-22T06:23:15+00:00
+				})
+
+				It("fails", func() {
+					Expect(err).To(HaveOccurred())
+				})
+
+				It("has an error message", func() {
+					Expect(err).To(MatchError(ContainSubstring("fuse has blown")))
+				})
+			})
+		})
+
+		Context("request with runway", func() {
+			BeforeEach(func() {
+				req = strings.NewReader(`{
+					"source": {
+						"uri": "https://github.com/homeport/freeze-calendar-resource",
+						"path": "examples/freeze-calendar.yaml"
+					},
+					"version": { "sha": "56dd3927d2582a332cacd5c282629293cd9a8870" },
+					"params": {
+						"mode": "fuse",
+						"runway": "2h"
+					}
+				}`)
+			})
+
+			It("executes successfully", func() {
+				Expect(err).ShouldNot(HaveOccurred())
+			})
+
+			Context("with not enough runway towards the beginning of the Holiday Season", func() {
+				BeforeEach(func() {
+					now = time.Unix(1669872795, 0) // 2022-12-01T05:33:15+00:00
 				})
 
 				It("fails", func() {
@@ -174,7 +208,7 @@ var _ = Describe("Get", func() {
 
 			Context("within the Holiday Season (regional freeze)", func() {
 				BeforeEach(func() {
-					now = time.Unix(1671690195, 0) // 2022-12-22T07:23:15+01:00
+					now = time.Unix(1671690195, 0) // 2022-12-22T06:23:15+00:00
 				})
 
 				Context("in scope", func() {

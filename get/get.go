@@ -120,21 +120,22 @@ func Get(ctx context.Context, req io.Reader, resp, log io.Writer, destination st
 		now = time.Now().UTC()
 	}
 
+	nowWithRunway := now.Add(request.Params.Runway.Duration)
+
 	var activeFreezeWindows []freeze.Window
 
 	for _, window := range calendar.Windows {
-		if window.Start.After(now) {
-			fmt.Fprintf(log, "Skipping window '%s' as its start %s is in the future (after %s)\n", window.Name, window.Start.UTC(), now.UTC())
+		if window.Start.After(nowWithRunway) {
+			fmt.Fprintf(log, "Skipping window '%s' as its start %s is in the future (after %s + %s runway)\n", window.Name, window.Start.UTC(), now.UTC(), request.Params.Runway.Duration)
 			continue
 		}
-
-		if window.End.Before(now) {
-			fmt.Fprintf(log, "Skipping window '%s' as its end %s is in the past (before %s)\n", window.Name, window.End.UTC(), now.UTC())
+		if window.End.Before(nowWithRunway) {
+			fmt.Fprintf(log, "Skipping window '%s' as its end %s is in the past (before %s + %s runway)\n", window.Name, window.End.UTC(), now.UTC(), request.Params.Runway.Duration)
 			continue
 		}
 
 		// Now we know we are within a freeze window.
-		// Let's check if the scope matches. No scope in a window or the request means all windows are considered matching, as long as the dates match.
+		// Let's check if the scope matches. No scope for a window or the request means all windows are considered matching, as long as the dates match.
 		if len(request.Params.Scope) == 0 {
 			activeFreezeWindows = append(activeFreezeWindows, window)
 		} else {

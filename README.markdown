@@ -41,6 +41,12 @@ In `gate` mode:
   - exit `0` we are _not_ within a freeze window (with a matching scope, if set)
   - sleep for `$INTERVAL`
 
+## Optional Parameters
+
+* `runway` (expected deploy time) will be taken into consideration so that there is enough time left to complete the deployment before the next freeze begins.
+
+  Accepts any string that Go's [`time.ParseDuration`](https://pkg.go.dev/time#ParseDuration) can parse.
+
 # `put` Behavior
 
 no-op
@@ -88,4 +94,3 @@ Update the calendar and push the changes:
 # TODO
 
 * Gate mode
-* Add get parameter for `runway` (expected deploy time) in order to not start if there is not enough time left to complete the deployment before the next freeze begins

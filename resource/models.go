@@ -18,8 +18,9 @@ type Request struct {
 }
 
 type Params struct {
-	Mode  Mode     `json:"mode" validate:"required"`
-	Scope []string `json:"scope"`
+	Mode   Mode     `json:"mode" validate:"required"`
+	Scope  []string `json:"scope"`
+	Runway Duration `json:"runway"`
 }
 
 type Mode enum.Member[string]
