@@ -182,7 +182,8 @@ func Get(ctx context.Context, req io.Reader, resp, log io.Writer, destination st
 	response := Response{
 		Version: resource.Version{SHA: head.Hash().String()},
 		Metadata: []resource.NameValuePair{
-			{Name: "number of freeze windows", Value: fmt.Sprintf("%d", len(calendar.Windows))},
+			{Name: "total number of freeze windows", Value: fmt.Sprintf("%d", len(calendar.Windows))},
+			{Name: "number of active freeze windows", Value: fmt.Sprintf("%d", len(activeFreezeWindows))},
 		},
 	}
 
