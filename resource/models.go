@@ -18,9 +18,11 @@ type Request struct {
 }
 
 type Params struct {
-	Mode   Mode     `json:"mode" validate:"required"`
-	Scope  []string `json:"scope"`
-	Runway Duration `json:"runway"`
+	Mode          Mode     `json:"mode" validate:"required"`
+	Scope         []string `json:"scope"`
+	Runway        Duration `json:"runway"`
+	RetryInterval Duration `json:"retry_interval"`
+	Verbose       bool     `json:"verbose"`
 }
 
 type Mode enum.Member[string]
@@ -66,7 +68,6 @@ type Source struct {
 	Password   string `json:"password"`
 	Branch     string `json:"branch"`
 	Path       string `json:"path" validate:"required,filepath"`
-	Debug      bool   `json:"debug"`
 }
 
 func (source Source) Auth() (auth transport.AuthMethod, err error) {

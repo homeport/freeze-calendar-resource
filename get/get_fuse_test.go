@@ -16,7 +16,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Get", func() {
+var _ = Describe("Get in fuse mode", func() {
 	var (
 		err    error
 		req    io.Reader

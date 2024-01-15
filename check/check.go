@@ -13,7 +13,6 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/storage/memory"
 	"github.com/go-playground/validator/v10"
-	"github.com/homeport/freeze-calendar-resource/githelpers"
 	"github.com/homeport/freeze-calendar-resource/resource"
 	"golang.org/x/exp/slices"
 )
@@ -63,45 +62,14 @@ func Check(ctx context.Context, req io.Reader, resp, log io.Writer) error {
 	fs := memfs.New()
 
 	repo, err := git.Clone(memory.NewStorage(), fs, &git.CloneOptions{
-		URL:      request.Source.URI,
-		Auth:     auth,
-		Progress: log,
+		URL:           request.Source.URI,
+		ReferenceName: plumbing.ReferenceName(request.Source.Branch),
+		Auth:          auth,
+		Progress:      log,
 	})
 
 	if err != nil {
 		return fmt.Errorf("unable to clone: %w", err)
-	}
-
-	head, err := repo.Head()
-
-	if err != nil {
-		return fmt.Errorf("unable to determine head: %w", err)
-	}
-
-	// Assuming that head.Name().IsBranch() is always true
-
-	shortHeadName := head.Name().Short()
-
-	if request.Source.Branch == "" {
-		fmt.Fprintf(log, "using default remote branch %s\n", shortHeadName)
-	} else if request.Source.Branch == shortHeadName {
-		fmt.Fprintf(log, "%s already checked out\n", shortHeadName)
-	} else {
-		fmt.Fprintf(log, "checking out branch %s\n", request.Source.Branch)
-
-		branchName := plumbing.NewRemoteReferenceName("origin", request.Source.Branch)
-
-		_, err := repo.Branch(string(branchName))
-
-		if err != nil {
-			return fmt.Errorf("%s %w", branchName, err) // branch does not exist
-		}
-
-		err = githelpers.CheckoutBranch(repo, branchName.Short())
-
-		if err != nil {
-			return fmt.Errorf("unable to checkout %s: %w", branchName, err)
-		}
 	}
 
 	cIter, err := repo.Log(&git.LogOptions{

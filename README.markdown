@@ -20,6 +20,7 @@ Emergency deploys are still possible by removing the `get` step from the pipelin
     private_key: ((vault/my-key))
     known_hosts: # see https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/githubs-ssh-key-fingerprints
     path: subdir/project-freeze-calendar.yaml
+    retry_interval: 1m
 ```
 
 # `check` Behavior
@@ -39,11 +40,15 @@ In `gate` mode:
 
   - fetch the _latest_ version of the freeze calendar
   - exit `0` we are _not_ within a freeze window (with a matching scope, if set)
-  - sleep for `$INTERVAL`
+  - sleep for `retry_delay`
 
 ## Optional Parameters
 
 * `runway` (expected deploy time) will be taken into consideration so that there is enough time left to complete the deployment before the next freeze begins.
+
+  Accepts any string that Go's [`time.ParseDuration`](https://pkg.go.dev/time#ParseDuration) can parse.
+
+* `retry_interval`: How long to wait until fetching the source again and re-checking if we can pass the gate. Defaults to `10s`.
 
   Accepts any string that Go's [`time.ParseDuration`](https://pkg.go.dev/time#ParseDuration) can parse.
 
@@ -93,4 +98,4 @@ Update the calendar and push the changes:
 
 # TODO
 
-* Gate mode
+* Use the new [concourse-resource-go](https://github.com/suhlig/concourse-resource-go) interface
