@@ -1,18 +1,18 @@
-# Deployment Window Resource
+# Freeze Calendar Resource
 
-Holds up jobs if current timestamp is within one of the given freeze windows. This is meant to block deployments during blackout periods.
+This is a Concourse resource that fails (or holds up) a job if the current timestamp is within one of the given freeze windows. This is meant to block deployments during freeze periods.
 
-Two modes of operation:
+The resource has two modes of operation:
 
-1. Gate: hold up the execution of a job while there is a freeze window within the next `n` minutes
 1. Fuse: fail the execution if there is a freeze window within the next `n` minutes
+1. Gate: hold up the execution of a job while there is a freeze window within the next `n` minutes
 
 Emergency deploys are still possible by removing the `get` step from the pipeline.
 
 # Source Configuration
 
 ```yaml
-- name: project-freeze-calendar
+- name: my-project-freeze-calendar
   type: freeze-calendar
   source:
     uri: git@github.example.com:my-project/freeze-calendar
