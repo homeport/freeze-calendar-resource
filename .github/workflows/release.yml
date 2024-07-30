@@ -1,0 +1,37 @@
+---
+name: Release Freeze Calendat Resource Image
+
+on:
+  push:
+    branches:
+    - main
+
+jobs:
+  image:
+    if: ${{ github.repository == 'homeport/freeze-calendar-resource' }}
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+
+    env:
+      IMAGE_HOST: ghcr.io
+      IMAGE_NAME: ${{ github.repository }}
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build and push container image
+      env:
+        REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        REGISTRY_USERNAME: ${{ github.repository_owner }}
+        DOCKER_BUILDKIT: "1"
+        BUILDKIT_PROGRESS: plain
+      run: |
+        docker login \
+          --username "$REGISTRY_USERNAME" \
+          --password-stdin \
+          "$IMAGE_HOST" <<<"$REGISTRY_PASSWORD"
+
+        docker build \
+          --push \
+          --tag "${IMAGE_HOST}/${IMAGE_NAME}:latest" \
+          .
