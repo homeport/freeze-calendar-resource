@@ -9,7 +9,7 @@ require (
 	github.com/go-playground/validator/v10 v10.17.0
 	github.com/onsi/ginkgo/v2 v2.15.0
 	github.com/onsi/gomega v1.31.1
-	github.com/orsinium-labs/enum v1.3.0
+	github.com/orsinium-labs/enum v1.4.0
 	github.com/spf13/cobra v1.8.0
 	golang.org/x/exp v0.0.0-20240205201215-2c58cdc269a3
 	gopkg.in/yaml.v3 v3.0.1
