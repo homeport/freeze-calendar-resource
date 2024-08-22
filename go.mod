@@ -7,7 +7,7 @@ require (
 	github.com/go-git/go-billy/v5 v5.5.0
 	github.com/go-git/go-git/v5 v5.12.0
 	github.com/go-playground/validator/v10 v10.22.0
-	github.com/onsi/ginkgo/v2 v2.20.0
+	github.com/onsi/ginkgo/v2 v2.20.1
 	github.com/onsi/gomega v1.34.1
 	github.com/orsinium-labs/enum v1.4.0
 	github.com/spf13/cobra v1.8.1
