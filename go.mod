@@ -1,6 +1,7 @@
 module github.com/homeport/freeze-calendar-resource
 
 go 1.21
+toolchain go1.22.5
 
 require (
 	github.com/benbjohnson/clock v1.3.5
@@ -46,6 +47,6 @@ require (
 	golang.org/x/net v0.29.0 // indirect
 	golang.org/x/sys v0.25.0 // indirect
 	golang.org/x/text v0.18.0 // indirect
-	golang.org/x/tools v0.24.0 // indirect
+	golang.org/x/tools v0.25.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
