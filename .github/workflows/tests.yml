@@ -28,7 +28,7 @@ jobs:
       run: go run -mod=mod github.com/onsi/ginkgo/v2/ginkgo run -v ./...
 
     - name: Upload Code Coverage Profile
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v5
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       with:
