@@ -8,7 +8,7 @@ require (
 	github.com/go-git/go-git/v5 v5.12.0
 	github.com/go-playground/validator/v10 v10.23.0
 	github.com/onsi/ginkgo/v2 v2.22.1
-	github.com/onsi/gomega v1.36.1
+	github.com/onsi/gomega v1.36.2
 	github.com/orsinium-labs/enum v1.4.0
 	github.com/spf13/cobra v1.8.1
 	golang.org/x/exp v0.0.0-20241210194714-1829a127f884
