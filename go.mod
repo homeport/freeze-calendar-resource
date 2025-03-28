@@ -2,6 +2,8 @@ module github.com/homeport/freeze-calendar-resource
 
 go 1.23.0
 
+toolchain go1.24.1
+
 require (
 	github.com/benbjohnson/clock v1.3.5
 	github.com/go-git/go-billy/v5 v5.6.2
@@ -43,7 +45,7 @@ require (
 	github.com/spf13/pflag v1.0.6 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	golang.org/x/crypto v0.36.0 // indirect
-	golang.org/x/net v0.37.0 // indirect
+	golang.org/x/net v0.38.0 // indirect
 	golang.org/x/sys v0.31.0 // indirect
 	golang.org/x/text v0.23.0 // indirect
 	golang.org/x/tools v0.31.0 // indirect
