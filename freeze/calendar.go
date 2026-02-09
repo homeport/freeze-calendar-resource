@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/go-playground/validator/v10"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 type Window struct {

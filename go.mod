@@ -2,8 +2,6 @@ module github.com/homeport/freeze-calendar-resource
 
 go 1.24.0
 
-toolchain go1.24.1
-
 require (
 	github.com/benbjohnson/clock v1.3.5
 	github.com/go-git/go-billy/v5 v5.7.0
@@ -13,8 +11,8 @@ require (
 	github.com/onsi/gomega v1.39.1
 	github.com/orsinium-labs/enum v1.5.0
 	github.com/spf13/cobra v1.10.2
-	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394
-	gopkg.in/yaml.v3 v3.0.1
+	go.yaml.in/yaml/v3 v3.0.4
+	golang.org/x/exp v0.0.0-20260112195511-716be5621a96
 )
 
 require (
@@ -34,7 +32,7 @@ require (
 	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
-	github.com/google/pprof v0.0.0-20260115054156-294ebfa9ad83 // indirect
+	github.com/google/pprof v0.0.0-20260202012954-cb029daf43ef // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/kevinburke/ssh_config v1.4.0 // indirect
@@ -46,7 +44,6 @@ require (
 	github.com/skeema/knownhosts v1.3.2 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
-	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/crypto v0.47.0 // indirect
 	golang.org/x/mod v0.32.0 // indirect
 	golang.org/x/net v0.49.0 // indirect
