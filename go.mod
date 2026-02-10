@@ -5,7 +5,7 @@ go 1.24.0
 require (
 	github.com/benbjohnson/clock v1.3.5
 	github.com/go-git/go-billy/v5 v5.7.0
-	github.com/go-git/go-git/v5 v5.16.4
+	github.com/go-git/go-git/v5 v5.16.5
 	github.com/go-playground/validator/v10 v10.30.1
 	github.com/onsi/ginkgo/v2 v2.28.1
 	github.com/onsi/gomega v1.39.1
