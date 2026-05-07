@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/benbjohnson/clock v1.3.5
-	github.com/go-git/go-billy/v5 v5.8.0
+	github.com/go-git/go-billy/v5 v5.9.0
 	github.com/go-git/go-git/v5 v5.18.0
 	github.com/go-playground/validator/v10 v10.30.2
 	github.com/onsi/ginkgo/v2 v2.28.3
@@ -12,7 +12,7 @@ require (
 	github.com/orsinium-labs/enum v1.5.0
 	github.com/spf13/cobra v1.10.2
 	go.yaml.in/yaml/v3 v3.0.4
-	golang.org/x/exp v0.0.0-20260112195511-716be5621a96
+	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f
 )
 
 require (
